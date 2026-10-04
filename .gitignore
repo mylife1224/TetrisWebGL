@@ -24,6 +24,9 @@ Desktop.ini
 *.unityweb
 *.gz
 
+# Batchmode logs
+*.log
+
 # Editor local
 .vs/
 .idea/
