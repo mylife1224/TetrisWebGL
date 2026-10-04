@@ -43,3 +43,10 @@ $env:TETRIS_BUILD_OUT = "<출력경로>"
 - 에이전트는 로컬 커밋까지, 푸시는 사용자가 SourceTree에서
 - `.gitignore`: Library/Temp/Logs/Build 산출물/*.log 제외. TTF·essentials는 포함 (재현성)
 - Temp 복사본은 삭제済. `C:\Dev`가 유일 진실
+
+## 빌드16 (2026-10-05, P0+P1+P2 반영)
+- 결과: `Succeeded totalBytes=10328183` (`webgl_build16.log:2156`)
+- 변경: 큐브 4셀 풀링(프레임당 Destroy 제거), 머티리얼 Resources 복제(CloneWithAlpha), PAD 토글 held 리셋, 게임오버 고스트 숨김, O회전 false
+- 검증: `TestClearLines ALL PASS` + 에디터 컴파일 에러 0건 + 헤드리스 Chrome 실기 확인 (콘솔 에러 0, 로딩바 사라짐, 한글 UI·보드·NEXT/HOLD·패드 정상 렌더)
+- 배포: 바탕화면 `TetrisWebGL_Play` 갱신 + `TetrisWebGL_itchio.zip` 재생성 (10.05MB)
+- 참고: 에이전트 브라우저 탭은 localhost 502로 검증 불가 → 로컬 Chrome CDP로 대체. 서버는 분리 프로세스로 띄울 것 (shell Job은 세션 종료 시 함께 죽음)
