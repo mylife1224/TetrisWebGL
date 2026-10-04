@@ -76,6 +76,7 @@ public class TetrisGame : MonoBehaviour
 
     // 터치 홀드 상태 (버튼이 누르고 있는 동안 true)
     TouchHoldButton btnLeft, btnRight, btnDown;
+    readonly List<TouchHoldButton> padButtons = new();
 
     // 홀드 반복 (DAS: 첫 반복까지 대기, ARR: 이후 반복 간격)
     float repLeft, repRight;
@@ -129,15 +130,37 @@ public class TetrisGame : MonoBehaviour
     {
         for (int i = 0; i < 7; i++)
             blockMats[i] = Resources.Load<Material>($"Materials/Block_{(TetrominoType)i}") ?? CreateLitMaterial(BlockColors[i]);
-        ghostGrayMat = MakeGhostMaterial(new Color(0.78f, 0.82f, 0.9f), 0.14f);
         bgMat = Resources.Load<Material>("Materials/BoardBg") ?? CreateLitMaterial(new Color(0.13f, 0.15f, 0.2f));
-        flashMat = CreateLitMaterial(Color.white);
-        flashMat.SetColor("_EmissionColor", Color.white * 0.9f);
+        // 빌드에서 Shader.Find가 null일 수 있어 Resources 머티리얼을 복제 (셰이더 참조 유지)
+        ghostGrayMat = CloneWithAlpha(blockMats[0], new Color(0.78f, 0.82f, 0.9f), 0.14f);
+        previewMat = CloneWithAlpha(blockMats[0], Color.white, 0.1f);
+        flashMat = new Material(blockMats[0]);
+        flashMat.color = Color.white;
+        if (flashMat.HasProperty("_EmissionColor")) flashMat.SetColor("_EmissionColor", Color.white * 0.9f);
         flashMat.EnableKeyword("_EMISSION");
-        previewMat = MakeGhostMaterial(Color.white, 0.1f);
     }
 
-    // Resources 에셋이 없을 때의 예비 경로 (빌드에서는 Resources 에셋이 셰이더를 포함)
+    // 기존 머티리얼 복제 + 투명화. Shader.Find를 호출하지 않아 WebGL 스트리핑에 안전
+    static Material CloneWithAlpha(Material src, Color c, float alpha)
+    {
+        var m = new Material(src);
+        m.color = new Color(c.r, c.g, c.b, alpha);
+        if (m.HasProperty("_Surface")) m.SetFloat("_Surface", 1f); // URP 투명
+        else
+        {
+            m.SetFloat("_Mode", 3f); // Built-in Transparent
+            m.SetInt("_SrcBlend", (int)UnityEngine.Rendering.BlendMode.SrcAlpha);
+            m.SetInt("_DstBlend", (int)UnityEngine.Rendering.BlendMode.OneMinusSrcAlpha);
+            m.SetInt("_ZWrite", 0);
+            m.DisableKeyword("_ALPHATEST_ON");
+            m.EnableKeyword("_ALPHABLEND_ON");
+            m.DisableKeyword("_ALPHAPREMULTIPLY_ON");
+            m.renderQueue = 3000;
+        }
+        return m;
+    }
+
+    // Resources 예비 경로 전용 (빌드 정상 시 호출되지 않음). 빌드에서는 Resources 에셋이 셰이더를 포함
     Material CreateLitMaterial(Color c)
     {
         var m = new Material(LitShader());
@@ -147,7 +170,8 @@ public class TetrisGame : MonoBehaviour
         return m;
     }
 
-    Material MakeGhostMaterial(Color c, float alpha)
+    // 구 런타임 생성 경로 (미사용, WebGL 스트리핑 회피를 위해 CloneWithAlpha로 대체됨)
+    static Material MakeGhostMaterialUnused(Color c, float alpha)
     {
         var m = new Material(LitShader());
         m.color = new Color(c.r, c.g, c.b, alpha);
@@ -199,7 +223,7 @@ public class TetrisGame : MonoBehaviour
         var lineMat = Resources.Load<Material>("Materials/BoardLine");
         if (lineMat == null)
         {
-            lineMat = new Material(UnlitShader());
+            lineMat = new Material(bgMat);
             lineMat.color = new Color(0.3f, 0.35f, 0.45f);
         }
         for (int i = 0; i < 4; i++)
@@ -638,7 +662,9 @@ public class TetrisGame : MonoBehaviour
         colors.pressedColor = new Color(0.4f, 0.8f, 1f, 0.5f);
         btn.colors = colors;
         MakeChildLabel(go.transform, label, fontSize);
-        return go.AddComponent<TouchHoldButton>();
+        var hold = go.AddComponent<TouchHoldButton>();
+        padButtons.Add(hold);
+        return hold;
     }
 
     void UpdateScoreUI()
@@ -842,6 +868,7 @@ public class TetrisGame : MonoBehaviour
 
     void ApplyPadVisibility()
     {
+        foreach (var b in padButtons) if (b != null) b.held = false; // 토글 중 눌림 stuck 방지
         if (leftPadGO != null) leftPadGO.SetActive(padsOn);
         if (rightPadGO != null) rightPadGO.SetActive(padsOn);
         if (padImg != null) padImg.color = new Color(1, 1, 1, padsOn ? 0.18f : 0.07f);
@@ -1046,16 +1073,17 @@ public class TetrisGame : MonoBehaviour
 
     void RefreshGhost()
     {
-        foreach (var g in ghostCubes) Destroy(g);
-        ghostCubes.Clear();
-        if (gameOver) { HidePreview(); return; }
+        if (gameOver) { HideGhostAndPreview(); return; }
         var gp = GhostPos();
-        foreach (var cell in core.CurrentCells)
+        EnsurePooledCubes(ghostCubes, core.CurrentCells.Count);
+        for (int i = 0; i < core.CurrentCells.Count; i++)
         {
-            var go = MakeCube((int)core.CurrentType, new Vector3(gp.x + cell.x, gp.y + cell.y, 0.05f));
-            go.GetComponent<MeshRenderer>().material = ghostGrayMat;
-            go.transform.parent = boardRoot.transform;
-            ghostCubes.Add(go);
+            var cell = core.CurrentCells[i];
+            var go = ghostCubes[i];
+            go.transform.position = new Vector3(gp.x + cell.x, gp.y + cell.y, 0.05f);
+            go.transform.localScale = Vector3.one * 0.92f;
+            go.GetComponent<MeshRenderer>().sharedMaterial = ghostGrayMat;
+            go.SetActive(true);
         }
         RefreshPreviewLines(gp);
     }
@@ -1092,6 +1120,32 @@ public class TetrisGame : MonoBehaviour
         foreach (var q in previewQuads) q.SetActive(false);
     }
 
+    // 고정 4셀 풀: 부족하면 생성, 초과분은 숨김 (매 프레임 Destroy 방지)
+    void EnsurePooledCubes(List<GameObject> list, int count)
+    {
+        while (list.Count < count)
+        {
+            var go = MakeCube(0, Vector3.zero);
+            go.transform.parent = boardRoot.transform;
+            go.SetActive(false);
+            list.Add(go);
+        }
+        for (int i = count; i < list.Count; i++)
+            if (list[i] != null) list[i].SetActive(false);
+    }
+
+    void HideActiveAndGhost()
+    {
+        foreach (var c in activeCubes) if (c != null) c.SetActive(false);
+        HideGhostAndPreview();
+    }
+
+    void HideGhostAndPreview()
+    {
+        foreach (var g in ghostCubes) if (g != null) g.SetActive(false);
+        HidePreview();
+    }
+
     GameObject MakeCube(int matId, Vector3 pos, float s = 0.92f)
     {
         var mesh = CubeMesh();
@@ -1125,16 +1179,17 @@ public class TetrisGame : MonoBehaviour
 
     void RefreshActiveCubes()
     {
-        foreach (var c in activeCubes) Destroy(c);
-        activeCubes.Clear();
-        if (gameOver) return;
+        if (gameOver) { HideActiveAndGhost(); return; }
         int matId = (int)core.CurrentType;
-        foreach (var cell in core.CurrentCells)
+        EnsurePooledCubes(activeCubes, core.CurrentCells.Count);
+        for (int i = 0; i < core.CurrentCells.Count; i++)
         {
-            var p = new Vector3(core.CurrentPos.x + cell.x, core.CurrentPos.y + cell.y, 0);
-            var go = MakeCube(matId, p);
-            go.transform.parent = boardRoot.transform;
-            activeCubes.Add(go);
+            var cell = core.CurrentCells[i];
+            var go = activeCubes[i];
+            go.transform.position = new Vector3(core.CurrentPos.x + cell.x, core.CurrentPos.y + cell.y, 0);
+            go.transform.localScale = Vector3.one * 0.92f;
+            go.GetComponent<MeshRenderer>().sharedMaterial = blockMats[matId];
+            go.SetActive(true);
         }
         RefreshGhost();
     }

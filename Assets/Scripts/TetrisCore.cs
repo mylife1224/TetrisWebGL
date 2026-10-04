@@ -56,7 +56,7 @@ public class TetrisCore
 
     public bool TryRotate(int dir)
     {
-        if (CurrentType == TetrominoType.O) return true;
+        if (CurrentType == TetrominoType.O) return false; // O는 회전 불필요 (호출측 효과음 방지)
         var rotated = new List<Vector2Int>(CurrentCells.Count);
         foreach (var c in CurrentCells)
             rotated.Add(dir == 1 ? new Vector2Int(c.y, -c.x) : new Vector2Int(-c.y, c.x));
