@@ -1,0 +1,31 @@
+# Unity
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Aa]utoSave*/
+*.pidb.meta
+*.pdb.meta
+
+# Unity crash handler
+sysinfo.txt
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Build outputs (itch.io zip은 Releases에 첨부)
+/TetrisBuild*/
+*.unityweb
+*.gz
+
+# Editor local
+.vs/
+.idea/
+*.user
+*.suo
