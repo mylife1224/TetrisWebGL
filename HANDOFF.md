@@ -40,9 +40,20 @@ $env:TETRIS_BUILD_OUT = "<출력경로>"
 3. 서버 종료 (포트 8080 정리) → zip 재생성
 
 ## 코웍 규칙
-- 에이전트는 로컬 커밋까지, 푸시는 사용자가 SourceTree에서
+- 에이전트는 로컬 커밋까지, 푸시는 사용자가 SourceTree에서 (단, 사용자가 직접 푸시 요청하면 에이전트가 수행)
 - `.gitignore`: Library/Temp/Logs/Build 산출물/*.log 제외. TTF·essentials는 포함 (재현성)
 - Temp 복사본은 삭제済. `C:\Dev`가 유일 진실
+
+## 코웍 체제 (2026-10-05~, worktree)
+- 내 영역: `C:\Dev\TETRIS_WEBGL` (`main`) — 빌드/테스트 전용
+- 사용자 영역: `C:\Dev\TETRIS_WORK` (`work` 브랜치, worktree) — 에디터 작업용
+- 에디터 버전 통일: 6000.3.13f1 (양쪽 동일 버전으로 열 것)
+- 자동생성 파일은 에이전트 소유: `Main.unity`(빌드 시 재생성), `NotoSansKR SDF.asset`(rebake). 사용자 브랜치에서 씬 하이어라키 직접 편집 금지 (빌드 때 증발)
+- 사용자 변경 범위: 코드 수치·에셋 추가·새 스크립트 (씬 배치는 이 프로젝트에 없는 개념 — 전부 코드 생성)
+- 머지 절차: main 커밋은 사용자가 `merge main`으로 가져가기 / work는 합칠 때 알리면 에이전트가 main에 merge 후 빌드 검증
+- 동시 빌드 금지. 에이전트는 batchmode 시작/종료 신호를 매번 알림
+- 상시 요청: 3년 공백 후 복귀 중인 유저라 각 과정마다 `이 과정을 하는 이유:` 형태로 첨삭. 중단 요청 전까지 유지
+- 학습 Q&A 다룬 주제: 코드생성 vs 씬배치, Additive 씬, UI프리팹 vs UI씬, 화면전환 구조(Single+상시씬), 웹UI 하이브리드. 다음 세션 학습 이어가기용
 
 ## 빌드16 (2026-10-05, P0+P1+P2 반영)
 - 결과: `Succeeded totalBytes=10328183` (`webgl_build16.log:2156`)
