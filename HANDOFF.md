@@ -80,3 +80,10 @@ $env:TETRIS_BUILD_OUT = "<출력경로>"
 - `7e3bc22` 게임규칙 이전: `TetrisGame.cs` 통째 복사 후 프리팹 패치 (HUD 프리팹/Block 프리팹/`Fruit_*`, 고스트·예고·플래시 텍스처 제거). 로직 1:1, 필드명 유지
 - 스모크: `TetrisV2SmokeTest` (playmode 90프레임, HUD/점수/블럭≥4) PASS. 함정 2건: (1) `EditorApplication.EnterPlayMode()` 없음 → `isPlaying` setter 사용. (2) 테스트 카운터 이름은 `Block` (MakeCube가 개명) — `(Clone)` 아님. 대기 패턴은 `SMOKE frames`로 (출력 형식과 일치시킬 것)
 - `EditorSettings.asset`의 enterPlayModeOptions 변경은 커밋 제외 (런타임에 매번 설정하므로). 다음: V2 실기 조작 확인 + `BuildV2Player`
+
+## 세션 기록 (2026-10-07, 무음 수정 + 푸시)
+- 원인: `AudioListener` 0개 → Unity 전체 음소거 (구·V2 공통, 빌드16부터). V2(`a06f0f4`) + 구버전(`9ac4950`) 모두 카메라에 리스너 보장 패치. 구 코드는 사용자 요청으로 예외 수정
+- 검증: `TestClearLines ALL PASS`, V2 스모크 `PASS (audio=True)`. `EditorSettings.asset` 부산물은 별도 원복 커밋 (`f644bd6`)
+- 푸시 플로우 확립: 에이전트 요청 시 푸시 수행. `main` 탭 푸시(작업물) + `work` 탭 병합·푸시(작업환경) → 현재 전체 0/0 동기화
+- 미결: 바탕화면 실행본은 빌드16 무음 그대로. 소리 나는 실행본 원하면 빌드17 필요
+- 다음 세션: 디테일 폴리싱 (프리팹 비주얼 사용자 측) → 수 세션 후 itch.io 서비스 배포 (`BuildItchioPlayer` → `TetrisWebGL_itchio.zip` 파이프라인 그대로 사용)
