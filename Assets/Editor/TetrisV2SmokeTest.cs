@@ -63,8 +63,11 @@ public static class TetrisV2SmokeTest
             if (!go.scene.IsValid()) continue; // 프리팹 에셋 제외
             if (go.name == "Block" && go.activeInHierarchy) blocks++; // MakeCube가 "Block"으로 명명
         }
-        bool pass = hud != null && score != null && score.StartsWith("점수") && blocks >= 4;
-        Debug.Log($"[TetrisV2] SMOKE frames={frame} hud={hud != null} score='{score}' blocks={blocks} => {(pass ? "PASS" : "FAIL")}");
+        var listener = Object.FindFirstObjectByType<AudioListener>();
+        var src = GameObject.Find("GameV2")?.GetComponent<AudioSource>();
+        bool audio = listener != null && src != null;
+        bool pass = hud != null && score != null && score.StartsWith("점수") && blocks >= 4 && audio;
+        Debug.Log($"[TetrisV2] SMOKE frames={frame} hud={hud != null} score='{score}' blocks={blocks} audio={audio} => {(pass ? "PASS" : "FAIL")}");
         exitCode = pass ? 0 : 1;
     }
 }

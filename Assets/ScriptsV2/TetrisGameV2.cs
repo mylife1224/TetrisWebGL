@@ -127,6 +127,14 @@ public class TetrisGameV2 : MonoBehaviour
         cam.clearFlags = CameraClearFlags.SolidColor;
         mainCam = cam;
         camBasePos = cam.transform.position;
+        // 무음 수정: 리스너가 씬에 하나도 없으면 Unity가 전체 음소거함.
+        // 구버전 공통 버그이나 구 코드는 비교용으로 동결 → V2만 수정.
+#if UNITY_6000_0_OR_NEWER
+        if (cam.GetComponent<AudioListener>() == null && FindFirstObjectByType<AudioListener>() == null)
+#else
+        if (cam.GetComponent<AudioListener>() == null && FindObjectOfType<AudioListener>() == null)
+#endif
+            cam.gameObject.AddComponent<AudioListener>();
     }
 
     void SetupMaterials()
