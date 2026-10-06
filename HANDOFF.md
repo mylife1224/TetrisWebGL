@@ -61,3 +61,9 @@ $env:TETRIS_BUILD_OUT = "<출력경로>"
 - 검증: `TestClearLines ALL PASS` + 에디터 컴파일 에러 0건 + 헤드리스 Chrome 실기 확인 (콘솔 에러 0, 로딩바 사라짐, 한글 UI·보드·NEXT/HOLD·패드 정상 렌더)
 - 배포: 바탕화면 `TetrisWebGL_Play` 갱신 + `TetrisWebGL_itchio.zip` 재생성 (10.05MB)
 - 참고: 에이전트 브라우저 탭은 localhost 502로 검증 불가 → 로컬 Chrome CDP로 대체. 서버는 분리 프로세스로 띄울 것 (shell Job은 세션 종료 시 함께 죽음)
+
+## 세션 기록 (2026-10-06, worktree 복원 + SourceTree 기억더듬기)
+- 증상: `C:\Dev\TETRIS_WORK` 폴더 소실 + `TETRIS_WEBGL`이 `work`에 체크아웃된 상태로 발견 (main=work 동일 4f8d8cc)
+- 복원: `TETRIS_WEBGL`에서 `git checkout main` → `git worktree add "C:\Dev\TETRIS_WORK" work`. 현재 `WEBGL=[main]` / `WORK=[work]` 정상
+- SourceTree 교훈: 한 브랜치는 한 worktree에만 체크아웃 가능. `WEBGL` 탭에서 `work` 체크아웃 시도는 `already used`가 정상. 해결은 새 탭 → 추가(Add) → `C:\Dev\TETRIS_WORK` 등록. 클론/생성 아님
+- 다음 세션 시작점: worktree 2탭 구조 확인 (`git worktree list`) 후 작업 이어가기
