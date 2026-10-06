@@ -67,3 +67,10 @@ $env:TETRIS_BUILD_OUT = "<출력경로>"
 - 복원: `TETRIS_WEBGL`에서 `git checkout main` → `git worktree add "C:\Dev\TETRIS_WORK" work`. 현재 `WEBGL=[main]` / `WORK=[work]` 정상
 - SourceTree 교훈: 한 브랜치는 한 worktree에만 체크아웃 가능. `WEBGL` 탭에서 `work` 체크아웃 시도는 `already used`가 정상. 해결은 새 탭 → 추가(Add) → `C:\Dev\TETRIS_WORK` 등록. 클론/생성 아님
 - 다음 세션 시작점: worktree 2탭 구조 확인 (`git worktree list`) 후 작업 이어가기
+
+## 세션 기록 (2026-10-06, 블럭 프리팹 + 과일 블럭)
+- `823b6a8` 블럭 프리팹: `Assets/UI/Resources/Prefabs/Block.prefab` (MeshFilter 내장Cube + MeshRenderer Block_I, 콜라이더 없음) + 생성기 `Assets/Editor/TetrisBlockPrefabBuilder.cs`. 단일 프리팹 + sharedMaterial 교체 방식
+- `6cef379` 과일 블럭: `Assets/UI/Resources/Textures/Fruit_7종.png` (64px 도트, 코드 생성 후 실물 커밋) + `Assets/Editor/TetrisFruitBuilder.cs` (Ensure=없을 때만 생성 / Apply=부착). 매핑 I사과 O딸기 T바나나 S오렌지 Z배 J복숭아 L수박, 배경은 기존 블럭색 유지
+- `EnsureRuntimeMaterials`가 머티리얼 재생성 직후 과일 부착 → 빌드해도 유지. 색상표 단일 진실 공급원 = `TetrisFruitBuilder.Blocks`
+- batchmode 주의 2건: (1) `& Unity.exe` 실행 후 셸이 대기 없이 복귀 → 검증 전 로그 `Exiting batchmode` 확인 필수. (2) 죽은 프로세스의 `Temp/UnityLockfile` 잔재로 1회 거부 → 소멸 후 자동 해결. 유저 WORK 에디터와 간섭 없음 실증
+- 원격 동기화済 (`main`/`work` 모두 origin과 0/0). 다음: 사용자 측 프리팹 디테일 수정 커밋 → 알리면 에이전트가 work→main 머지 + 빌드 검증
