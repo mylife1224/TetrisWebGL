@@ -189,16 +189,15 @@ public static class TetrisKoreanFontSetup
     public static void EnsureRuntimeMaterials()
     {
         AssetDatabase.Refresh();
-        string[] names = { "Block_I", "Block_O", "Block_T", "Block_S", "Block_Z", "Block_J", "Block_L" };
-        Color[] colors = {
-            new Color(0.2f,0.8f,0.9f), new Color(0.95f,0.8f,0.2f), new Color(0.7f,0.4f,0.9f),
-            new Color(0.3f,0.85f,0.4f), new Color(0.95f,0.3f,0.3f), new Color(0.3f,0.5f,0.95f),
-            new Color(0.95f,0.55f,0.2f),
-        };
         const string dir = "Assets/UI/Resources/Materials";
         Directory.CreateDirectory(dir);
         var lit = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
-        for (int i = 0; i < 7; i++) SaveMat($"{dir}/{names[i]}.mat", lit, colors[i], 0.35f);
+        // 블럭색/과일 매핑 단일 진실 공급원 (TetrisFruitBuilder.Blocks).
+        // 이 과정을 하는 이유: SaveMat이 Delete 후 재생성이라 색상표를 둘로 나누면
+        // 언젠가 어긋나서 과일 배경색과 머티리얼색이 달라지기 때문.
+        foreach (var b in TetrisFruitBuilder.Blocks) SaveMat($"{dir}/{b.matName}.mat", lit, b.bg, 0.35f);
+        TetrisFruitBuilder.EnsureFruitTextures(); // PNG 준비 (없을 때만 생성, 평소엔 리포 파일 사용)
+        TetrisFruitBuilder.ApplyToMaterials(dir); // 재생성된 머티리얼에 과일 부착
         SaveMat($"{dir}/BoardBg.mat", lit, new Color(0.13f, 0.15f, 0.2f), 0f);
         var unlit = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
         SaveMat($"{dir}/BoardLine.mat", unlit, new Color(0.3f, 0.35f, 0.45f), 0f);
