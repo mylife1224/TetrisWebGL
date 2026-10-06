@@ -27,7 +27,10 @@ public static class TetrisBlockPrefabBuilder
         }
 
         var blockMat = AssetDatabase.LoadAssetAtPath<Material>(
-            "Assets/UI/Resources/Materials/Block_I.mat");
+            "Assets/UI/Resources/Materials/Fruit_I.mat");
+        if (blockMat == null) // Fruit 생성 전이면 구 머티리얼로 대체
+            blockMat = AssetDatabase.LoadAssetAtPath<Material>(
+                "Assets/UI/Resources/Materials/Block_I.mat");
         if (blockMat == null)
             throw new System.Exception("[Tetris] Block_I.mat 없음. EnsureRuntimeMaterials 실패?");
 

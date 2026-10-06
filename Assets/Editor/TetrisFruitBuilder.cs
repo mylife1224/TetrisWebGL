@@ -14,10 +14,16 @@ public static class TetrisFruitBuilder
 
     public struct BlockSpec
     {
-        public string matName;
+        public string matName;   // 구 씬용 (plain 색상)
+        public string fruitMat;  // V2용 (과일 텍스처)
         public Color bg;
         public Fruit fruit;
-        public BlockSpec(string n, Color b, Fruit f) { matName = n; bg = b; fruit = f; }
+        public BlockSpec(string n, Color b, Fruit f)
+        {
+            matName = n;
+            fruitMat = "Fruit_" + n.Substring("Block_".Length);
+            bg = b; fruit = f;
+        }
     }
 
     // 단일 진실 공급원: 머티리얼명/배경색/과일 매핑.
@@ -41,7 +47,7 @@ public static class TetrisFruitBuilder
     public static void RedrawMenu()
     {
         EnsureFruitTextures(force: true);
-        ApplyToMaterials("Assets/UI/Resources/Materials");
+        ApplyFruitToMaterials("Assets/UI/Resources/Materials");
     }
 
     // PNG 파일 준비. force=false면 이미 있는 파일은 그대로 둠 (미리 준비된 7개 우선).
@@ -77,15 +83,16 @@ public static class TetrisFruitBuilder
         AssetDatabase.Refresh();
     }
 
-    // 기존 PNG를 머티리얼에 부착. SaveMat 재생성 직후 호출해야 빌드 때 살아남음.
-    public static void ApplyToMaterials(string matDir)
+    // Fruit_* 머티리얼에 기존 PNG 부착. Block_*는 건드리지 않음 (구 씬 plain 유지).
+    // SaveMat 재생성 직후 호출해야 빌드 때 살아남음.
+    public static void ApplyFruitToMaterials(string matDir)
     {
         foreach (var b in Blocks)
         {
-            var mat = AssetDatabase.LoadAssetAtPath<Material>($"{matDir}/{b.matName}.mat");
+            var mat = AssetDatabase.LoadAssetAtPath<Material>($"{matDir}/{b.fruitMat}.mat");
             var fruitTex = AssetDatabase.LoadAssetAtPath<Texture2D>(FruitFile(b.fruit));
             if (mat == null || fruitTex == null)
-                throw new System.Exception("[Tetris] 과일 부착 실패: " + b.matName);
+                throw new System.Exception("[Tetris] 과일 부착 실패: " + b.fruitMat);
             mat.mainTexture = fruitTex;
             mat.color = Color.white; // 배경색은 텍스처에 구워져 있으므로 틴트 제거
             EditorUtility.SetDirty(mat);

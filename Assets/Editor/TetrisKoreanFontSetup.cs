@@ -196,8 +196,9 @@ public static class TetrisKoreanFontSetup
         // 이 과정을 하는 이유: SaveMat이 Delete 후 재생성이라 색상표를 둘로 나누면
         // 언젠가 어긋나서 과일 배경색과 머티리얼색이 달라지기 때문.
         foreach (var b in TetrisFruitBuilder.Blocks) SaveMat($"{dir}/{b.matName}.mat", lit, b.bg, 0.35f);
+        foreach (var b in TetrisFruitBuilder.Blocks) SaveMat($"{dir}/{b.fruitMat}.mat", lit, Color.white, 0.35f);
         TetrisFruitBuilder.EnsureFruitTextures(); // PNG 준비 (없을 때만 생성, 평소엔 리포 파일 사용)
-        TetrisFruitBuilder.ApplyToMaterials(dir); // 재생성된 머티리얼에 과일 부착
+        TetrisFruitBuilder.ApplyFruitToMaterials(dir); // 재생성된 Fruit 머티리얼에 과일 부착 (Block_*는 plain 유지 → 구 씬 복원)
         SaveMat($"{dir}/BoardBg.mat", lit, new Color(0.13f, 0.15f, 0.2f), 0f);
         var unlit = Shader.Find("Universal Render Pipeline/Unlit") ?? Shader.Find("Unlit/Color");
         SaveMat($"{dir}/BoardLine.mat", unlit, new Color(0.3f, 0.35f, 0.45f), 0f);
