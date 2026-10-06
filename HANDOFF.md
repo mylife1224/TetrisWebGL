@@ -74,3 +74,9 @@ $env:TETRIS_BUILD_OUT = "<출력경로>"
 - `EnsureRuntimeMaterials`가 머티리얼 재생성 직후 과일 부착 → 빌드해도 유지. 색상표 단일 진실 공급원 = `TetrisFruitBuilder.Blocks`
 - batchmode 주의 2건: (1) `& Unity.exe` 실행 후 셸이 대기 없이 복귀 → 검증 전 로그 `Exiting batchmode` 확인 필수. (2) 죽은 프로세스의 `Temp/UnityLockfile` 잔재로 1회 거부 → 소멸 후 자동 해결. 유저 WORK 에디터와 간섭 없음 실증
 - 원격 동기화済 (`main`/`work` 모두 origin과 0/0). 다음: 사용자 측 프리팹 디테일 수정 커밋 → 알리면 에이전트가 work→main 머지 + 빌드 검증
+
+## 세션 기록 (2026-10-07, V2 게임규칙 이전)
+- `c0f04a3` V2 껍데기: `TetrisGameV2` + `V2.unity` + `Fruit_*` 분리 (`Block_*` plain 복원 → 구씬 빌드16 외형)
+- `7e3bc22` 게임규칙 이전: `TetrisGame.cs` 통째 복사 후 프리팹 패치 (HUD 프리팹/Block 프리팹/`Fruit_*`, 고스트·예고·플래시 텍스처 제거). 로직 1:1, 필드명 유지
+- 스모크: `TetrisV2SmokeTest` (playmode 90프레임, HUD/점수/블럭≥4) PASS. 함정 2건: (1) `EditorApplication.EnterPlayMode()` 없음 → `isPlaying` setter 사용. (2) 테스트 카운터 이름은 `Block` (MakeCube가 개명) — `(Clone)` 아님. 대기 패턴은 `SMOKE frames`로 (출력 형식과 일치시킬 것)
+- `EditorSettings.asset`의 enterPlayModeOptions 변경은 커밋 제외 (런타임에 매번 설정하므로). 다음: V2 실기 조작 확인 + `BuildV2Player`
