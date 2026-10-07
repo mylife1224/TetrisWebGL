@@ -96,3 +96,12 @@ $env:TETRIS_BUILD_OUT = "<출력경로>"
 - 배포: 바탕화면 `TetrisWebGL_Play` 갱신 + `TetrisWebGL_itchio.zip` 재생성 (10.09MB). 서버 정리済 (8080)
 - 보충(동일 세션 재검증): 화면 밖 창(`--window-position` 음수) CDP 캡처는 합성 중단된 스플래시 잔상만 나옴 → headless(`--remote-debugging-port`)+실시간 90초 대기 후 `Page.captureScreenshot`이 정답. 최종 캡처 `tetris17g.png` = 게임오버 화면 정상 (무입력 방치 귀결, 아티팩트 아님). 스크립트 `Temp/opencode/cdp-shot.ps1`
 - 다음 세션: 디테일 폴리싱 (프리팹 비주얼 사용자 측) → 수 세션 후 itch.io 서비스 배포
+
+## 세션 기록 (2026-10-08, V2 첫 플레이어 빌드)
+- 범위 확정: v1 동결(참고용). 폴리싱·배포는 v2로
+- `685cf58` `BuildV2Player` (`TetrisV2Builder`): V2.unity 재생성+WebGL, 출력 `Build/WebGL_V2` (v1 산출물 분리). 사전 스모크 `PASS (frames=90, audio=True)`
+- 결과: `Succeeded totalBytes=10360328` (`v2player1.log:2212`, v1빌드17 대비 +115B)
+- 검증: CDP `bar:none` + 과일 블럭·한글 UI·NEXT·패드 정상 렌더 (`v2player1.png` = 무입력 방치 게임오버). 폴리싱 후보: `CCW` 버튼 글자 줄바꿈(`CC/W`), `HOLD` 좌우 중복 (v1 공통 레이아웃)
+- 배포: 바탕화면 `TetrisWebGL_V2_Play` 신규 + `TetrisWebGL_V2_itchio.zip` (10,086,170B). v1 폴더 손대지 않음
+- 함정: 검증 서버 종료 시 powershell 전수열거 kill은 도구 러너까지 죽여 exit255. `CommandLine like *serve*`로 PID 특정 후 개별 kill할 것
+- 다음: V2 폴리싱 (프리팹 비주얼 사용자 측) → itch.io 서비스 배포
