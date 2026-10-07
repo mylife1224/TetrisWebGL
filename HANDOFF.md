@@ -94,4 +94,5 @@ $env:TETRIS_BUILD_OUT = "<출력경로>"
 - 헤드리스 Chrome 플래그: `--enable-unsafe-swiftshader` 필수 (없으면 WebGL 컨텍스트 실패로 로딩 정지)
 - 검증: CDP 콘솔 에러 0 + 로딩바 사라짐 + 한글 UI·보드·NEXT/HOLD·패드 정상 렌더 (verify17d.png)
 - 배포: 바탕화면 `TetrisWebGL_Play` 갱신 + `TetrisWebGL_itchio.zip` 재생성 (10.09MB). 서버 정리済 (8080)
+- 보충(동일 세션 재검증): 화면 밖 창(`--window-position` 음수) CDP 캡처는 합성 중단된 스플래시 잔상만 나옴 → headless(`--remote-debugging-port`)+실시간 90초 대기 후 `Page.captureScreenshot`이 정답. 최종 캡처 `tetris17g.png` = 게임오버 화면 정상 (무입력 방치 귀결, 아티팩트 아님). 스크립트 `Temp/opencode/cdp-shot.ps1`
 - 다음 세션: 디테일 폴리싱 (프리팹 비주얼 사용자 측) → 수 세션 후 itch.io 서비스 배포
