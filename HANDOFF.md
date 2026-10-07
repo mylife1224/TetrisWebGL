@@ -105,3 +105,11 @@ $env:TETRIS_BUILD_OUT = "<출력경로>"
 - 배포: 바탕화면 `TetrisWebGL_V2_Play` 신규 + `TetrisWebGL_V2_itchio.zip` (10,086,170B). v1 폴더 손대지 않음
 - 함정: 검증 서버 종료 시 powershell 전수열거 kill은 도구 러너까지 죽여 exit255. `CommandLine like *serve*`로 PID 특정 후 개별 kill할 것
 - 다음: V2 폴리싱 (프리팹 비주얼 사용자 측) → itch.io 서비스 배포
+
+## 세션 기록 (2026-10-08, V2 폴리싱 1차 — 코드 3건)
+- `0358ed8` (main, 미푸시): `TetrisGameV2.cs` + `TetrisKoreanFontSetup.cs` + `TetrisUiPrefabBuilder.cs`
+- ① CCW 줄바꿈: CCW/CW 44pt→26pt + `AddPadButton`에 `NoWrap` (88px 버튼에 폴백 3글자가 2줄로 깨지던 원인)
+- ② HOLD 중복: 우측 패드 `HOLD`→`SWAP` (동작=동사형, 월드 좌측 HOLD=영역명 유지). v1은 동결이라 손대지 않음
+- ③ 힌트 모바일 기준: `"◄► 이동 / ▼ 소프트드롭 / ↺↻ 회전 / DROP 하드드롭 / SWAP 홀드"` — V2 런타임 지정이라 WORK 프리팹 비주얼 작업과 충돌 없음. `홀` 1글리프를 `KoreanChars`에 추가 (static bake 네모박스 방지)
+- ④ 과일 비주얼: 사용자 WORK 브랜치에서 직접 처리 예정
+- 미검증: 컴파일·폰트 bake는 다음 `BuildV2Player` 때 일괄 확인 (홀 bake 후 CDP 캡처로 SWAP/힌트 렌더 확인 예정)
