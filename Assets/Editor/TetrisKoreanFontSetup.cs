@@ -14,7 +14,8 @@ public static class TetrisKoreanFontSetup
     const string OutPath = "Assets/UI/Resources/Fonts/NotoSansKR SDF.asset";
 
     // 게임 UI 전체 글리프 (ASCII + 한글 + 기호). 기호가 폰트에 없으면 LiberationSans 폴백이 커버
-    const string KoreanChars = "점수레벨줄게임오버다시시작화살표이동회전소프트드롭하방향키터치콤보일시정지계속";
+    // 힌트 "홀드"에 쓰는 홀 포함. 새 문구에 한글을 쓰면 여기에도 추가할 것 (static bake에 안 구우면 네모박스).
+    const string KoreanChars = "점수레벨줄게임오버다시시작화살표이동회전소프트드롭하방향키터치콤보일시정지계속홀";
     const string SymbolChars = "◄►▼↺↻";
     static readonly string[] SymbolFontPaths = {
         "Assets/Fonts/NotoSansSymbols.ttf",

@@ -85,7 +85,7 @@ public static class TetrisUiPrefabBuilder
             new Vector2(16, -52), 360, "", 24, TextAlignmentOptions.TopLeft);
         combo.gameObject.SetActive(false);
         MakeLabel(cgo.transform, font, "HintText", new Vector2(1, 1), new Vector2(1, 1),
-            new Vector2(-16, -104), 340, "방향키/터치 이동 UP/Z 회전 SPACE 하드드롭", 18, TextAlignmentOptions.TopRight);
+            new Vector2(-16, -104), 340, "◄► 이동 / ▼ 소프트드롭 / ↺↻ 회전 / DROP 하드드롭 / SWAP 홀드", 18, TextAlignmentOptions.TopRight);
 
         // 빈 행 컨테이너 3개 (V2가 PadButton을 채움)
         MakeRow(cgo.transform, "MovePad", new Vector2(0, 0), new Vector2(24, 24), new Vector2(0, 0));

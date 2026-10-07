@@ -457,6 +457,12 @@ public class TetrisGameV2 : MonoBehaviour
         gameOverPanel = inst.transform.Find("GameOverPanel")?.gameObject;
         finalScoreText = gameOverPanel?.transform.Find("PanelSubLabel")?.GetComponent<TextMeshProUGUI>();
         pausePanel = inst.transform.Find("PausePanel")?.gameObject;
+        // 힌트는 모바일(터치 패드) 기준 문구로 런타임 지정.
+        // 이 과정을 하는 이유: 프리팹 기본값은 키보드 전제(방향키/UP/SPACE)라
+        // 모바일에서 안내가 어긋나고, 코드 지정이면 WORK 쪽 비주얼 작업과 충돌이 없기 때문.
+        // 사용 글리프(홀)는 TetrisKoreanFontSetup.KoreanChars에 포함되어 static bake에 구워짐.
+        var hintText = inst.transform.Find("HintText")?.GetComponent<TextMeshProUGUI>();
+        if (hintText != null) hintText.text = "◄► 이동 / ▼ 소프트드롭 / ↺↻ 회전 / DROP 하드드롭 / SWAP 홀드";
         leftPadGO = inst.transform.Find("MovePad")?.gameObject;
         rightPadGO = inst.transform.Find("ActionPad")?.gameObject;
         var sysPad = inst.transform.Find("SysPad");
@@ -465,9 +471,12 @@ public class TetrisGameV2 : MonoBehaviour
         btnDown = AddPadButton(btnPrefab, leftPadGO?.transform, Pick("▼", "v"), 44, null);
         btnRight = AddPadButton(btnPrefab, leftPadGO?.transform, Pick("►", ">"), 44, null);
 
-        AddPadButton(btnPrefab, rightPadGO?.transform, "HOLD", 26, OnHold);
-        AddPadButton(btnPrefab, rightPadGO?.transform, Pick("↺", "CCW"), 44, OnRotateCCW);
-        AddPadButton(btnPrefab, rightPadGO?.transform, Pick("↻", "CW"), 44, OnRotateCW);
+        // 우측 패드: 동작 버튼은 동사형(SWAP/DROP), 월드 좌측 HOLD는 영역명.
+        // 이 과정을 하는 이유: 양쪽이 같은 "HOLD"라 영역 표시인지 동작 버튼인지 헷갈리고,
+        // CCW/CW를 44pt에 두면 폴백 텍스트(CCW)가 88px 버튼에서 줄바꿈되기 때문.
+        AddPadButton(btnPrefab, rightPadGO?.transform, "SWAP", 26, OnHold);
+        AddPadButton(btnPrefab, rightPadGO?.transform, Pick("↺", "CCW"), 26, OnRotateCCW);
+        AddPadButton(btnPrefab, rightPadGO?.transform, Pick("↻", "CW"), 26, OnRotateCW);
         AddPadButton(btnPrefab, rightPadGO?.transform, "DROP", 26, OnHardDrop);
 
         AddPadButton(btnPrefab, sysPad, "II", 44, TogglePause);
@@ -491,7 +500,7 @@ public class TetrisGameV2 : MonoBehaviour
         var go = Instantiate(prefab, parent, false);
         go.name = "PadBtn_" + label;
         var tmp = go.GetComponentInChildren<TextMeshProUGUI>();
-        if (tmp != null) { tmp.text = label; tmp.fontSize = fontSize; }
+        if (tmp != null) { tmp.text = label; tmp.fontSize = fontSize; tmp.textWrappingMode = TextWrappingModes.NoWrap; }
         var hold = go.GetComponent<TouchHoldButton>();
         if (hold != null)
         {
