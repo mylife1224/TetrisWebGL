@@ -37,5 +37,31 @@ public static class TetrisV2Builder
         TetrisBlockPrefabBuilder.BuildBlockPrefab();
         BuildV2Scene();
     }
+
+    // V2 WebGL 빌드 (v1 BuildItchioPlayer의 V2판).
+    // 이 과정을 하는 이유: v1은 참고용 동결이라 V2에 독립 파이프라인이 필요하고,
+    // 출력 경로를 분리(Build/WebGL_V2)해야 v1 빌드 산출물을 덮어쓰지 않기 때문.
+    // V2.unity는 매번 재생성 (에이전트 소유 자동생성 파일이라 직접 편집 금지).
+    public static void BuildV2Player()
+    {
+        TetrisKoreanFontSetup.ApplyItchio();
+        TetrisKoreanFontSetup.EnsureRuntimeMaterials();
+        TetrisKoreanFontSetup.CreateStatic();
+        BuildV2Scene();
+        AssetDatabase.Refresh();
+        EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
+
+        string outDir = System.Environment.GetEnvironmentVariable("TETRIS_V2_BUILD_OUT");
+        if (string.IsNullOrEmpty(outDir)) outDir = "Build/WebGL_V2";
+        var opts = new BuildPlayerOptions
+        {
+            scenes = new[] { ScenePath },
+            locationPathName = outDir,
+            target = BuildTarget.WebGL,
+            options = BuildOptions.None
+        };
+        var report = BuildPipeline.BuildPlayer(opts);
+        Debug.Log("[TetrisV2] build result: " + report.summary.result + " totalBytes=" + report.summary.totalSize);
+    }
 }
 #endif
