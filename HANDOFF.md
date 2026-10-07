@@ -87,3 +87,11 @@ $env:TETRIS_BUILD_OUT = "<출력경로>"
 - 푸시 플로우 확립: 에이전트 요청 시 푸시 수행. `main` 탭 푸시(작업물) + `work` 탭 병합·푸시(작업환경) → 현재 전체 0/0 동기화
 - 미결: 바탕화면 실행본은 빌드16 무음 그대로. 소리 나는 실행본 원하면 빌드17 필요
 - 다음 세션: 디테일 폴리싱 (프리팹 비주얼 사용자 측) → 수 세션 후 itch.io 서비스 배포 (`BuildItchioPlayer` → `TetrisWebGL_itchio.zip` 파이프라인 그대로 사용)
+
+## 세션 기록 (2026-10-08, 빌드17 소리나는 실행본)
+- 결과: `Succeeded totalBytes=10360213` (`build17.log:2219`)
+- 함정 재확인 2건: (1) `& Unity.exe` 셸 즉시 복귀 → PID 17356 실빌드 중. `Exiting batchmode` 확인 전 복사 금지. (2) 헤드리스 일회성 스크린샷은 로딩바에서 멈춤 (가상시간이 비동기 로딩을 못 밀어냄) → CDP 실시간 대기(50초)+`Page.captureScreenshot`으로 대체. 검증 스크립트: Temp/opencode `cdp_verify.ps1` (Temp라 커밋 안 됨, 필요시 재생성)
+- 헤드리스 Chrome 플래그: `--enable-unsafe-swiftshader` 필수 (없으면 WebGL 컨텍스트 실패로 로딩 정지)
+- 검증: CDP 콘솔 에러 0 + 로딩바 사라짐 + 한글 UI·보드·NEXT/HOLD·패드 정상 렌더 (verify17d.png)
+- 배포: 바탕화면 `TetrisWebGL_Play` 갱신 + `TetrisWebGL_itchio.zip` 재생성 (10.09MB). 서버 정리済 (8080)
+- 다음 세션: 디테일 폴리싱 (프리팹 비주얼 사용자 측) → 수 세션 후 itch.io 서비스 배포
