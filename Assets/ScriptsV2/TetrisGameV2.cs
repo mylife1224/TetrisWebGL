@@ -79,6 +79,7 @@ public class TetrisGameV2 : MonoBehaviour
     GameObject pausePanel;
     TextMeshProUGUI holdLabel, nextLabel; // 캔버스 라벨 (미니는 월드 유지)
     int lastScreenW, lastScreenH;
+    float lastSf;
 
     // 홀드 반복 (DAS: 첫 반복까지 대기, ARR: 이후 반복 간격)
     float repLeft, repRight;
@@ -592,6 +593,7 @@ public class TetrisGameV2 : MonoBehaviour
         PlaceSideLabel(holdLabel, new Vector3(-2.6f, 15.2f, 0));
         PlaceSideLabel(nextLabel, new Vector3(12.2f, 15.2f, 0));
         lastScreenW = Screen.width; lastScreenH = Screen.height;
+        lastSf = uiCanvas != null ? uiCanvas.scaleFactor : 1f;
     }
 
     void PlaceSideLabel(TextMeshProUGUI tmp, Vector3 world)
@@ -894,7 +896,8 @@ public class TetrisGameV2 : MonoBehaviour
         HandleGravity();
         RefreshActiveCubes();
         UpdateParticles(Time.deltaTime);
-        if (Screen.width != lastScreenW || Screen.height != lastScreenH) LayoutSideLabels();
+        if (Screen.width != lastScreenW || Screen.height != lastScreenH ||
+            (uiCanvas != null && !Mathf.Approximately(uiCanvas.scaleFactor, lastSf))) LayoutSideLabels();
     }
 
     void LateUpdate()
