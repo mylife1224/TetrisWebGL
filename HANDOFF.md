@@ -211,3 +211,10 @@ $env:TETRIS_BUILD_OUT = "<출력경로>"
 - 검증 수단: 외부에서 `webfetch`로 게임 페이지→iframe 경로→개별 파일 서빙 상태 직접 조회 가능. 대시보드(`itch.io/dashboard`)는 로그인 전용이라 에이전트 조회 불가 — 상태 확인은 캡처/문구 전달로
 - 미결(배포 후): ① BGM 외부 NES 리믹스 — Public 상태에서 저작권 리스크 진행 중. 자작 교체→빌드7→`/` zip 재업로드 예정. ② itch 태그에 `Tetris` 포함 + 페이지명 `Fanmade_Tetris` — 상표 관점 정리 미결
 - 다음: BGM 자작 교체 → 빌드7 → `/` zip(zipfix.ps1) 재업로드
+
+## 세션 기록 (2026-10-08, HOLD/NEXT 속빈 글자 진단+수정)
+- 증상: 월드 라벨(HOLD·NEXT)만 속이 비고 외곽선만 보임. HUD(SCORE·PAUSE)는 정상
+- 확실한 부분: 덤프(v2dump1.log) 결과 텍스트·자간·정렬·폰트 전부 정상. 잘라낸 캡처(holdcrop3.png)에서 속빈 렌더 확정. 카메라 ortho + 3D TMP의 `isOrthographic` 기본값 false(원근 가정) 조합이 원인. SDF 스케일이 어긋나 외곽선 0.15가 속을 삼킴
+- 수정: `MakeWorldLabel`에 `tmp.isOrthographic = true` 1줄 (`880cd0f`, 빌드 미반영)
+- 관찰(미확정): 에디터 플레이모드 종료 후 폰트 에셋의 `_ScaleRatioA/C`가 1→0.833/0.677로 자동 변경됨. 런타임이 렌더 기준으로 고친 값이나, 에디터 창 크기 기준일 수 있어 원복. 다음 `BuildV2Player`의 `CreateStatic`이 폰트를 재생성하므로 영향 없음
+- 다음: 사용자 요청 시 빌드7 (스모크→빌드→CDP→배포), BGM 교체와 묶을지 정하기
