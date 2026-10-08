@@ -1144,8 +1144,8 @@ public class TetrisGameV2 : MonoBehaviour
 
     void PopupScore(Vector3 pos, string text, Color color)
     {
-        var tmp = MakeCanvasLabel("Popup", text, 30, color);
-        ((RectTransform)tmp.transform).sizeDelta = new Vector2(320, 48);
+        var tmp = MakeCanvasLabel("Popup", text, 90, color);
+        ((RectTransform)tmp.transform).sizeDelta = new Vector2(520, 110);
         popups.Add(tmp);
         StartCoroutine(PopupRise(tmp, pos));
     }
