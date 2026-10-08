@@ -559,8 +559,8 @@ public class TetrisGameV2 : MonoBehaviour
 
     void SetupWorldSidePanels()
     {
-        MakeWorldLabel("NEXT", new Vector3(12.2f, 15.2f, 0), 64, 0.125f, Color.white);
-        MakeWorldLabel("HOLD", new Vector3(-2.6f, 15.2f, 0), 64, 0.125f, Color.white);
+        MakeWorldLabel("NEXT", new Vector3(12.2f, 15.2f, 0), 64, 0.10f, Color.white);
+        MakeWorldLabel("HOLD", new Vector3(-2.6f, 15.2f, 0), 64, 0.10f, Color.white);
     }
 
     TextMeshPro MakeWorldLabel(string text, Vector3 pos, float fontSize, float scale, Color color)
