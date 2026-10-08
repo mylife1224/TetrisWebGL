@@ -66,7 +66,7 @@ public static class TetrisV2SmokeTest
         var listener = Object.FindFirstObjectByType<AudioListener>();
         var src = GameObject.Find("GameV2")?.GetComponent<AudioSource>();
         bool audio = listener != null && src != null;
-        bool pass = hud != null && score != null && score.StartsWith("점수") && blocks >= 4 && audio;
+        bool pass = hud != null && score != null && score.StartsWith("SCORE") && blocks >= 4 && audio;
         Debug.Log($"[TetrisV2] SMOKE frames={frame} hud={hud != null} score='{score}' blocks={blocks} audio={audio} => {(pass ? "PASS" : "FAIL")}");
         exitCode = pass ? 0 : 1;
     }

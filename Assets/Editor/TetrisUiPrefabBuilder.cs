@@ -1,8 +1,8 @@
 // UI 프리팹 생성기 (에이전트 소유 자동화).
 // 현행 TetrisGame.SetupUI가 코드로 찍어내는 UI를 프리팹 2종으로 옮김:
-//   Prefabs/UI/HudCanvas.prefab  (Canvas + 점수/콤보/힌트 + 빈 패드 행 3 + 게임오버/일시정지 패널)
+//   Prefabs/UI/HudCanvas.prefab  (Canvas + 점수/콤보 + SysPad 1 + 게임오버/일시정지 패널)
 //   Prefabs/UI/PadButton.prefab  (88x88 버튼 단위: Image+Button+TMP+TouchHoldButton)
-// 설계: 버튼은 1종 프리팹을 V2가 행 컨테이너에 Instantiate (위치는 코드값과 동일).
+// 설계: SysPad의 일시정지 버튼 1종만 V2가 Instantiate. Hint/이동패드/SND 미사용.
 // onClick/onTap 리스너는 프리팹에 직렬화하지 않고 V2 런타임에 연결.
 // 이 과정을 하는 이유: UnityEvent 리스너는 코드 메서드를 가리켜 프리팹에 저장할 수 없고,
 // 저장해도 구 스크립트(TetrisGame)를 참조해 V2 분리가 깨지기 때문.
@@ -80,22 +80,18 @@ public static class TetrisUiPrefabBuilder
         cgo.AddComponent<GraphicRaycaster>();
 
         MakeLabel(cgo.transform, font, "ScoreText", new Vector2(0, 1), new Vector2(0, 1),
-            new Vector2(16, -12), 360, "점수 0   레벨 1   줄 0", 28, TextAlignmentOptions.TopLeft);
+            new Vector2(16, -12), 360, "SCORE 0   LV 1   LINES 0", 28, TextAlignmentOptions.TopLeft);
         var combo = MakeLabel(cgo.transform, font, "ComboText", new Vector2(0, 1), new Vector2(0, 1),
             new Vector2(16, -52), 360, "", 24, TextAlignmentOptions.TopLeft);
         combo.gameObject.SetActive(false);
-        MakeLabel(cgo.transform, font, "HintText", new Vector2(1, 1), new Vector2(1, 1),
-            new Vector2(-16, -104), 340, "◄► 이동 / ▼ 소프트드롭 / ↺↻ 회전 / DROP 하드드롭 / SWAP 홀드", 18, TextAlignmentOptions.TopRight);
 
-        // 빈 행 컨테이너 3개 (V2가 PadButton을 채움)
-        MakeRow(cgo.transform, "MovePad", new Vector2(0, 0), new Vector2(24, 24), new Vector2(0, 0));
-        MakeRow(cgo.transform, "ActionPad", new Vector2(1, 0), new Vector2(-24, 24), new Vector2(1, 0));
+        // SysPad 1종 (일시정지 버튼용). 이동/액션 패드와 Hint는 미사용.
         MakeRow(cgo.transform, "SysPad", new Vector2(1, 1), new Vector2(-16, -12), new Vector2(1, 1));
 
         BuildPanel(cgo.transform, font, "GameOverPanel", new Vector2(340, 240),
-            "게임 오버", 36, "점수 0", 28, "RestartBtn", "다시 시작 (R)");
+            "GAME OVER", 36, "SCORE 0", 28, "RestartBtn", "RESTART (R)");
         BuildPanel(cgo.transform, font, "PausePanel", new Vector2(300, 200),
-            "일시정지", 34, null, 0, "ResumeBtn", "계속");
+            "PAUSED", 34, null, 0, "ResumeBtn", "RESUME");
 
         PrefabUtility.SaveAsPrefabAsset(cgo, UiDir + "/HudCanvas.prefab");
         Object.DestroyImmediate(cgo);
@@ -201,7 +197,7 @@ public static class TetrisUiPrefabBuilder
             throw new System.Exception("[Tetris] UI 프리팹 저장 실패.");
         if (hud.GetComponent<Canvas>() == null || hud.GetComponent<CanvasScaler>() == null)
             throw new System.Exception("[Tetris] HudCanvas 컴포넌트 누락.");
-        foreach (var n in new[] { "ScoreText", "ComboText", "HintText", "MovePad", "ActionPad", "SysPad", "GameOverPanel", "PausePanel" })
+        foreach (var n in new[] { "ScoreText", "ComboText", "SysPad", "GameOverPanel", "PausePanel" })
             if (hud.transform.Find(n) == null)
                 throw new System.Exception("[Tetris] HudCanvas 자식 누락: " + n);
         var pbtn = pad.GetComponent<Button>();

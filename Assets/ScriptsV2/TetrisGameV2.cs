@@ -9,7 +9,7 @@ using TMPro;
 // V2: 구 TetrisGame.cs 복사본 + 프리팹 패치 (로직 1:1, 비교용 구 코드 유지).
 // 변경점: UI 코드생성→HudCanvas/PadButton 프리팹, 블럭 생성→Block 프리팹, 머티리얼→Fruit_*.
 // 게임 규칙(낙하/회전/고정/삭제/점수/연출/오디오)은 구버전과 동일.
-// UI: Canvas + TextMeshPro. 조작: 키보드 + 터치 패드 (좌 하단 이동 / 우 하단 회전)
+// UI: Canvas + TextMeshPro. 조작: 키보드 전용 (패드/Hint/SND 미사용)
 // 연출: 고스트+라인예고, Next/Hold, 플래시+파티클+쉐이크, 콤보, 일시정지, 절차적 효과음
 public class TetrisGameV2 : MonoBehaviour
 {
@@ -77,13 +77,6 @@ public class TetrisGameV2 : MonoBehaviour
     GameObject gameOverPanel;
     TextMeshProUGUI finalScoreText;
     GameObject pausePanel;
-    GameObject leftPadGO, rightPadGO;
-    Image padImg, sndImg;
-    bool padsOn = true;
-
-    // 터치 홀드 상태 (버튼이 누르고 있는 동안 true)
-    TouchHoldButton btnLeft, btnRight, btnDown;
-    readonly List<TouchHoldButton> padButtons = new();
 
     // 홀드 반복 (DAS: 첫 반복까지 대기, ARR: 이후 반복 간격)
     float repLeft, repRight;
@@ -648,41 +641,13 @@ public class TetrisGameV2 : MonoBehaviour
         gameOverPanel = inst.transform.Find("GameOverPanel")?.gameObject;
         finalScoreText = gameOverPanel?.transform.Find("PanelSubLabel")?.GetComponent<TextMeshProUGUI>();
         pausePanel = inst.transform.Find("PausePanel")?.gameObject;
-        // 힌트는 모바일(터치 패드) 기준 문구로 런타임 지정.
-        // 이 과정을 하는 이유: 프리팹 기본값은 키보드 전제(방향키/UP/SPACE)라
-        // 모바일에서 안내가 어긋나고, 코드 지정이면 WORK 쪽 비주얼 작업과 충돌이 없기 때문.
-        // 사용 글리프(홀)는 TetrisKoreanFontSetup.KoreanChars에 포함되어 static bake에 구워짐.
-        var hintText = inst.transform.Find("HintText")?.GetComponent<TextMeshProUGUI>();
-        if (hintText != null) hintText.text = "◄► 이동 / ▼ 소프트드롭 / ↺↻ 회전 / DROP 하드드롭 / SWAP 홀드";
-        leftPadGO = inst.transform.Find("MovePad")?.gameObject;
-        rightPadGO = inst.transform.Find("ActionPad")?.gameObject;
+        // 패드/Hint/SND 미사용 (키보드 전용). SysPad에는 일시정지 1종만.
         var sysPad = inst.transform.Find("SysPad");
 
-        btnLeft = AddPadButton(btnPrefab, leftPadGO?.transform, Pick("◄", "<"), 44, null);
-        btnDown = AddPadButton(btnPrefab, leftPadGO?.transform, Pick("▼", "v"), 44, null);
-        btnRight = AddPadButton(btnPrefab, leftPadGO?.transform, Pick("►", ">"), 44, null);
-
-        // 우측 패드: 동작 버튼은 동사형(SWAP/DROP), 월드 좌측 HOLD는 영역명.
-        // 이 과정을 하는 이유: 양쪽이 같은 "HOLD"라 영역 표시인지 동작 버튼인지 헷갈리고,
-        // CCW/CW를 44pt에 두면 폴백 텍스트(CCW)가 88px 버튼에서 줄바꿈되기 때문.
-        AddPadButton(btnPrefab, rightPadGO?.transform, "SWAP", 26, OnHold);
-        AddPadButton(btnPrefab, rightPadGO?.transform, Pick("↺", "CCW"), 26, OnRotateCCW);
-        AddPadButton(btnPrefab, rightPadGO?.transform, Pick("↻", "CW"), 26, OnRotateCW);
-        AddPadButton(btnPrefab, rightPadGO?.transform, "DROP", 26, OnHardDrop);
-
-        AddPadButton(btnPrefab, sysPad, "II", 44, TogglePause);
-        var padTap = AddPadButton(btnPrefab, sysPad, "PAD", 26, TogglePads);
-        var sndTap = AddPadButton(btnPrefab, sysPad, "SND", 26, ToggleMute);
-        padImg = padTap?.GetComponent<Image>();
-        sndImg = sndTap?.GetComponent<Image>();
+        AddPadButton(btnPrefab, sysPad, "PAUSE", 26, TogglePause);
 
         WirePanelButton(gameOverPanel?.transform, "RestartBtn", Restart);
         WirePanelButton(pausePanel?.transform, "ResumeBtn", TogglePause);
-
-        // 저장된 설정 적용
-        padsOn = PlayerPrefs.GetInt("tetris_pads", 1) == 1;
-        ApplyPadVisibility();
-        ApplyMuteVisual();
     }
 
     TouchHoldButton AddPadButton(GameObject prefab, Transform parent, string label, int fontSize, UnityAction act)
@@ -695,7 +660,6 @@ public class TetrisGameV2 : MonoBehaviour
         var hold = go.GetComponent<TouchHoldButton>();
         if (hold != null)
         {
-            padButtons.Add(hold);
             if (act != null) hold.onTap.AddListener(act);
         }
         return hold;
@@ -708,30 +672,21 @@ public class TetrisGameV2 : MonoBehaviour
         else Debug.LogError("[TetrisV2] panel button missing: " + path);
     }
 
-    // 기본 폰트+폴백에 없는 글리프면 ASCII 대체 (네모박스 방지)
-    string Pick(string main, string fallback)
-    {
-        if (uiFont != null && uiFont.HasCharacters(main)) return main;
-        var lib = Resources.Load<TMP_FontAsset>("Fonts & Materials/LiberationSans SDF");
-        if (lib != null && lib != uiFont && lib.HasCharacters(main)) return main;
-        return fallback;
-    }
-
     void UpdateScoreUI()
     {
         if (scoreText != null)
-            scoreText.text = $"점수 {score}   레벨 {level}   줄 {totalLines}";
+            scoreText.text = $"SCORE {score}   LV {level}   LINES {totalLines}";
         if (comboText != null)
         {
             comboText.gameObject.SetActive(combo >= 2);
-            if (combo >= 2) comboText.text = $"콤보 x{combo}";
+            if (combo >= 2) comboText.text = $"COMBO x{combo}";
         }
     }
 
     void ShowGameOver()
     {
         if (finalScoreText != null)
-            finalScoreText.text = $"점수 {score}";
+            finalScoreText.text = $"SCORE {score}";
         if (gameOverPanel != null)
             gameOverPanel.SetActive(true);
         Play(sOver);
@@ -867,9 +822,9 @@ public class TetrisGameV2 : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.P) || Input.GetKeyDown(KeyCode.Escape)) TogglePause();
         if (Input.GetKeyDown(KeyCode.M)) ToggleMute();
 
-        bool leftHeld = Input.GetKey(KeyCode.LeftArrow) || (btnLeft != null && btnLeft.held);
-        bool rightHeld = Input.GetKey(KeyCode.RightArrow) || (btnRight != null && btnRight.held);
-        bool downHeld = Input.GetKey(KeyCode.DownArrow) || (btnDown != null && btnDown.held);
+        bool leftHeld = Input.GetKey(KeyCode.LeftArrow);
+        bool rightHeld = Input.GetKey(KeyCode.RightArrow);
+        bool downHeld = Input.GetKey(KeyCode.DownArrow);
 
         if (Input.GetKeyDown(KeyCode.UpArrow)) { if (core.TryRotate(1)) Play(sRotate); }
         if (Input.GetKeyDown(KeyCode.Z)) { if (core.TryRotate(-1)) Play(sRotate); }
@@ -913,7 +868,6 @@ public class TetrisGameV2 : MonoBehaviour
     public void OnRotateCW() { if (!gameOver && !paused && core.TryRotate(1)) Play(sRotate); }
     public void OnRotateCCW() { if (!gameOver && !paused && core.TryRotate(-1)) Play(sRotate); }
     public void OnHardDrop() { if (!gameOver && !paused && !inputLocked) { core.HardDrop(); AfterLock(); } }
-    public void OnHold() => DoHold();
 
     public void TogglePause()
     {
@@ -924,23 +878,6 @@ public class TetrisGameV2 : MonoBehaviour
         Play(sPause);
     }
 
-    public void TogglePads()
-    {
-        padsOn = !padsOn;
-        PlayerPrefs.SetInt("tetris_pads", padsOn ? 1 : 0);
-        PlayerPrefs.Save();
-        ApplyPadVisibility();
-        Play(sPause);
-    }
-
-    void ApplyPadVisibility()
-    {
-        foreach (var b in padButtons) if (b != null) b.held = false; // 토글 중 눌림 stuck 방지
-        if (leftPadGO != null) leftPadGO.SetActive(padsOn);
-        if (rightPadGO != null) rightPadGO.SetActive(padsOn);
-        if (padImg != null) padImg.color = new Color(1, 1, 1, padsOn ? 0.18f : 0.07f);
-    }
-
     public void ToggleMute()
     {
         muted = !muted;
@@ -948,13 +885,7 @@ public class TetrisGameV2 : MonoBehaviour
         if (bgm != null) bgm.mute = muted;
         PlayerPrefs.SetInt("tetris_mute", muted ? 1 : 0);
         PlayerPrefs.Save();
-        ApplyMuteVisual();
         Play(sPause);
-    }
-
-    void ApplyMuteVisual()
-    {
-        if (sndImg != null) sndImg.color = new Color(1, 1, 1, muted ? 0.07f : 0.18f);
     }
 
     void DoHold()
