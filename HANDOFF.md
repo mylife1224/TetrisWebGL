@@ -202,3 +202,12 @@ $env:TETRIS_BUILD_OUT = "<출력경로>"
 - 함정(신규): itch용 zip은 `Compress-Archive` 금지. `/` 엔트리명으로 만들 것. 빌드6 게임 내용물 변경 없음 (zip 포장만 수정, 바이트수 동일 13,734,242B)
 - 다음: 위 zip 재업로드 (기존 삭제→업로드→브라우저실행 체크→Save→해제 대기→강제새로고침 후 Run game)
 - 결과: `/` zip 재업로드 후 정상 실행 확인 (사용자 실기 OK). 첫 itch.io 서비스 개시
+
+## 세션 기록 (2026-10-08, itch.io 첫 배포 — 페이지 개설+트러블슈팅)
+- 페이지: `Fanmade_Tetris` (`https://mylife1224itch.itch.io/fanmade-tetris`, Public, PUBLISHED). 게임 내 타이틀은 `FruiTetris` (페이지명≠빌드 productName, 추후 통일 여부 미정)
+- 업로드 설정: `TetrisWebGL_V2_itchio.zip` 13MB + This file will be played in the browser 체크 + Viewport 960x600 Landscape + Fullscreen ON + Click to launch(Run game) ON + Mobile OFF(키보드 전용). Kind=HTML이 정답 (`Unity`라는 kind는 없음). 파일명 변경은 무관
+- 페이지 설명란 조작키: ←→ 이동, ↓ 소프트드롭, ↑ 회전, Z 역회전, Space 하드드롭, C 홀드, P 일시정지, M 음소거, R 재시작 + `Keyboard required!` 명시
+- 트러블슈팅 흐름: (1) Run game 후 빈 화면 → 콘솔에서 `Build/*`·`TemplateData/*` 404 확인. (2) zip 로컬 재현은 `file://` 에러 (정상, 직접 열기 불가라 재현 아님). (3) 구 경로(`html/19632771/`) 통째 404 = 삭제→재업로드 시 ID 재발급 때문 (옛 캐시 보고 판단 금지). (4) Restricted 단계에선 외부 404가 정상 → Public 전환 후 고정 주소로 검증. (5) `%5C` 실측으로 역슬래시 원인 확정 (위 기록)
+- 검증 수단: 외부에서 `webfetch`로 게임 페이지→iframe 경로→개별 파일 서빙 상태 직접 조회 가능. 대시보드(`itch.io/dashboard`)는 로그인 전용이라 에이전트 조회 불가 — 상태 확인은 캡처/문구 전달로
+- 미결(배포 후): ① BGM 외부 NES 리믹스 — Public 상태에서 저작권 리스크 진행 중. 자작 교체→빌드7→`/` zip 재업로드 예정. ② itch 태그에 `Tetris` 포함 + 페이지명 `Fanmade_Tetris` — 상표 관점 정리 미결
+- 다음: BGM 자작 교체 → 빌드7 → `/` zip(zipfix.ps1) 재업로드
