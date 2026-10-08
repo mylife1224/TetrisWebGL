@@ -197,11 +197,18 @@ public static class TetrisUiPrefabBuilder
     static void Thicken(TextMeshProUGUI tmp)
     {
         tmp.fontStyle = FontStyles.Bold;
-        if (tmp.fontSharedMaterial == null && tmp.font != null)
-            tmp.fontSharedMaterial = tmp.font.material;
-        if (tmp.fontSharedMaterial == null) return;
-        tmp.outlineWidth = 0.15f;
-        tmp.outlineColor = tmp.color;
+        Material baseMat = null;
+        try { baseMat = tmp.font != null ? tmp.font.material : null; }
+        catch (System.Exception) { baseMat = null; }
+        if (baseMat == null) return;
+        Material inst = null;
+        try { inst = new Material(baseMat); }
+        catch (System.Exception) { inst = null; }
+        if (inst == null) return;
+        inst.SetFloat(ShaderUtilities.ID_OutlineWidth, 0.15f);
+        inst.SetColor(ShaderUtilities.ID_OutlineColor, tmp.color);
+        try { tmp.fontSharedMaterial = inst; }
+        catch (System.Exception) { }
     }
 
     static void Verify()

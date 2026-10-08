@@ -582,17 +582,26 @@ public class TetrisGameV2 : MonoBehaviour
     // 전 라벨 두껍게 (Bold + 외곽선). 이 과정을 하는 이유: static bake SDF는
     // Bold 웨이트가 따로 구워져 있지 않아 fontStyle만으로는 두꺼워지지 않을 수 있고,
     // 글자색과 같은 외곽선이 SDF에서는 확실하게 굵기를 더해주기 때문.
-    // 머티리얼 가드: 구 프리팹의 TMP는 공유 머티리얼 참조가 끊어져 있을 수 있고,
-    // 끊어진 상태에서 outlineWidth를 건드리면 CreateMaterialInstance가 MissingReference를 던짐.
-    // 이 과정을 하는 이유: 크래시 대신 폰트 에셋 머티리얼로 복구하면 렌더링까지 정상화되기 때문.
+    // TMP setter(outlineWidth/outlieColor)를 직접 쓰지 않는 이유:
+    // 패키지 원본 TextMeshProUGUI.cs:1612-1621이 m_sharedMaterial/m_canvasRenderer를
+    // null 검사 없이 역참조하므로, 구 프리팹의 끊어진 머티리얼에서는
+    // MissingReference(1619) 또는 NullReference(1621)가 나기 때문 (실측 2건).
+    // 대신 우리가 만든 인스턴스 머티리얼에 셰이더 값을 직접 쓰고 교체한다.
     static void ThickenTMP(TMP_Text tmp)
     {
         tmp.fontStyle = FontStyles.Bold;
-        if (tmp.fontSharedMaterial == null && tmp.font != null)
-            tmp.fontSharedMaterial = tmp.font.material;
-        if (tmp.fontSharedMaterial == null) return;
-        tmp.outlineWidth = 0.15f;
-        tmp.outlineColor = tmp.color;
+        Material baseMat = null;
+        try { baseMat = tmp.font != null ? tmp.font.material : null; }
+        catch (System.Exception) { baseMat = null; }
+        if (baseMat == null) return;
+        Material inst = null;
+        try { inst = new Material(baseMat); }
+        catch (System.Exception) { inst = null; }
+        if (inst == null) return;
+        inst.SetFloat(ShaderUtilities.ID_OutlineWidth, 0.15f);
+        inst.SetColor(ShaderUtilities.ID_OutlineColor, tmp.color);
+        try { tmp.fontSharedMaterial = inst; }
+        catch (System.Exception) { }
     }
 
     void BuildMini(List<GameObject> list, TetrominoType t, Vector3 center, float cell)
