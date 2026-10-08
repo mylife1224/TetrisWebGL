@@ -145,7 +145,7 @@ public class TetrisGameV2 : MonoBehaviour
         bgMat = Resources.Load<Material>("Materials/BoardBg") ?? CreateLitMaterial(new Color(0.13f, 0.15f, 0.2f));
         // 빌드에서 Shader.Find가 null일 수 있어 Resources 머티리얼을 복제 (셰이더 참조 유지)
         ghostGrayMat = CloneWithAlpha(blockMats[0], new Color(0.78f, 0.82f, 0.9f), 0.14f);
-        previewMat = CloneWithAlpha(blockMats[0], Color.white, 0.2f);
+        previewMat = CloneWithAlpha(blockMats[0], Color.white, 0.25f);
         flashMat = new Material(blockMats[0]);
         flashMat.color = Color.white;
         flashMat.mainTexture = null; // 순백 플래시 (과일 그림 제거)
