@@ -358,30 +358,47 @@ public class TetrisGameV2 : MonoBehaviour
         return c;
     }
 
-    // 8비트 BGM (코로베이니키 선율+베이스 루프, 코드 합성이라 에셋·용량·라이선스 부담 없음).
-    // 이 과정을 하는 이유: 음원 파일을 넣으면 빌드 용량과 itch.io 배포물이 커지고,
-    // 전통 민요 선율은 저작권 걱정 없이 테트리스 정체성을 살리기 때문.
+    // 8비트 BGM (테트리스 Theme A 편곡식 루프, 코드 합성이라 에셋·용량 부담 없음).
+    // 악보(마피아노 22641, ♩=135) 기반으로 A-B-A-B-C-브릿지-D 119박 약 53초 루프.
+    // A/B=민요 원형, C/D/브릿지는 편곡부. 게임 루프는 1-24마디 반복 (악보 2페이지 엔딩 제외).
     bool bgmNeedStart = true;
     AudioClip BuildBgm()
     {
-        const float beat = 0.27f;
+        const float beat = 60f / 135f; // 악보 지정 템포
         const int rate = 22050;
         // (midi, 박). -1 = 쉼표. E5=76 B4=71 C5=72 D5=74 A4=69 F5=77 A5=81 G5=79
-        // 구조 A-A-B-A' (원곡/GB판처럼 반복으로 길이를 냄. 외통과만 하면 8초라 짧게 느껴짐)
+        // 구조 A-B-A-B-C-D 반복 (GB 다나카 편곡식). A/B=민요 원형, C/D=편곡 추가 파트(귀 재현, 확정 전 시聴 필요)
         var mel = new (int m, float b)[]
         {
             // A
             (76,1),(71,.5f),(72,.5f),(74,1),(72,.5f),(71,.5f),(69,1),(69,.5f),(72,.5f),
             (76,1),(74,.5f),(72,.5f),(71,1.5f),(72,.5f),(74,1),(76,1),(72,1),(69,1),(69,1),(-1,.5f),
-            // A 반복
+            // B
+            (74,1.5f),(77,.5f),(81,1),(79,.5f),(77,.5f),(76,1.5f),(72,.5f),
+            (76,1),(74,.5f),(72,.5f),(71,1),(71,.5f),(72,.5f),(74,1),(76,1),(72,1),(69,1),(69,1),(-1,1),
+            // A
             (76,1),(71,.5f),(72,.5f),(74,1),(72,.5f),(71,.5f),(69,1),(69,.5f),(72,.5f),
             (76,1),(74,.5f),(72,.5f),(71,1.5f),(72,.5f),(74,1),(76,1),(72,1),(69,1),(69,1),(-1,.5f),
             // B
             (74,1.5f),(77,.5f),(81,1),(79,.5f),(77,.5f),(76,1.5f),(72,.5f),
             (76,1),(74,.5f),(72,.5f),(71,1),(71,.5f),(72,.5f),(74,1),(76,1),(72,1),(69,1),(69,1),(-1,1),
-            // A' (마지막은 여유 쉼표로 루프 호흡)
-            (76,1),(71,.5f),(72,.5f),(74,1),(72,.5f),(71,.5f),(69,1),(69,.5f),(72,.5f),
-            (76,1),(74,.5f),(72,.5f),(71,1.5f),(72,.5f),(74,1),(76,1),(72,1),(69,1),(69,1),(-1,2),
+            // C (악보 11-15마디: E 시작, 앞은 길게 뒤는 잘게. 베이스 E장조 긴장)
+            (76,1),(74,.5f),(72,.5f),(74,1),(72,1),
+            (74,1),(72,1),(71,2),
+            (76,.5f),(79,.5f),(81,1),(79,.5f),(76,.5f),(74,1),
+            (72,1),(74,.5f),(72,.5f),(71,1),(72,1),
+            (71,1),(72,1),(76,2),
+            // 브릿지 (악보 16-20마디: 온음표·2분음표 호흡구간)
+            (69,1),(72,1),(76,2),
+            (76,4),
+            (80,4),
+            (76,2),(79,2),
+            (80,2),(76,2),
+            // D (악보 21-24마디: 2분음표 상승 후 A5 정점, G# 경유 루프로)
+            (76,2),(72,2),
+            (76,2),(80,2),
+            (74,1),(76,1),(77,1),(79,1),
+            (81,2),(80,2),
         };
         float totalBeats = 0;
         foreach (var n in mel) totalBeats += n.b;
@@ -398,21 +415,30 @@ public class TetrisGameV2 : MonoBehaviour
                 for (int i = 0; i < len && start + i < total; i++)
                 {
                     float tt = (float)i / rate;
-                    float env = Mathf.Min(1f, tt / 0.008f) * Mathf.Min(1f, (len - i) / (rate * 0.03f));
+                    float env = Mathf.Min(1f, tt / 0.008f) * Mathf.Min(1f, (len - i) / (rate * 0.03f)) * Mathf.Exp(-0.4f * tt / (n.b * beat));
                     float ph = 2f * Mathf.PI * f * tt;
                     d[start + i] += 0.16f * env * (Mathf.Sin(ph) + Mathf.Sin(3f * ph) / 6f);
                 }
             }
             t += n.b;
         }
-        int[] roots = { 45, 40, 41, 43, 40, 45, 40, 45 }; // A2 E2 F2 G2 순환 베이스
+        // 베이스: 파트별 루트 (악보 베이스 라인 기준. Am E / Dm G C Am / E Am C Am E / Am E E C E / Am E Dm E)
+        // 이 과정을 하는 이유: 전역 순환은 G# 선율과 F 루트가 충돌해 틀린 화음이 나기 때문.
+        float[] secBeats = { 15.5f, 16f, 15.5f, 16f, 20f, 20f, 16f };
+        int[][] secRoots = {
+            new[]{45,40,45,40}, new[]{38,43,36,45}, new[]{45,40,45,40},
+            new[]{38,43,36,45}, new[]{40,45,36,45,40}, new[]{45,40,40,36,40}, new[]{45,40,38,40},
+        };
         const float barBeats = 4f;
-        int nbars = Mathf.CeilToInt(totalBeats / barBeats);
-        for (int bar = 0; bar < nbars; bar++)
+        float secStart = 0;
+        for (int s = 0; s < secBeats.Length; s++)
         {
-            float f = 440f * Mathf.Pow(2f, (roots[bar % roots.Length] - 69) / 12f);
-            int start = (int)(rate * bar * barBeats * beat);
-            int len = (int)(rate * barBeats * beat);
+            int nbars = Mathf.CeilToInt(secBeats[s] / barBeats);
+            for (int bar = 0; bar < nbars; bar++)
+            {
+                float f = 440f * Mathf.Pow(2f, (secRoots[s][bar % secRoots[s].Length] - 69) / 12f);
+                int start = (int)(rate * (secStart + bar * barBeats) * beat);
+                int len = (int)(rate * barBeats * beat);
             for (int i = 0; i < len && start + i < total; i++)
             {
                 float tt = (float)i / rate;
@@ -421,8 +447,14 @@ public class TetrisGameV2 : MonoBehaviour
                 d[start + i] += 0.10f * env * (Mathf.Sin(ph) + Mathf.Sin(3f * ph) / 3f);
             }
         }
-        var c = AudioClip.Create("bgm", total, 1, rate, false);
-        c.SetData(d, 0);
+            secStart += secBeats[s];
+        }
+        // 루프 이음새 클릭 방지: 끝 50ms 페이드아웃 (시작은 어택이 0부터라 불필요).
+        // 이 과정을 하는 이유: 베이스가 마디 중간에 잘리면 매 루프마다 틱 소리가 나기 때문.
+        int fade = (int)(rate * 0.05f);
+        for (int i = 0; i < fade && i < total; i++)
+            d[total - 1 - i] *= Mathf.Min(1f, (float)i / fade);
+        var c = AudioClip.Create("bgm", total, 1, rate, false);        c.SetData(d, 0);
         return c;
     }
 
