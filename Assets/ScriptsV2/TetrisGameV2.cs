@@ -472,7 +472,12 @@ public class TetrisGameV2 : MonoBehaviour
         sTetris = MakeSeq(new[] { 523f, 659f, 784f, 1046f, 1318f }, 0.09f);
         sLevel = MakeSeq(new[] { 440f, 554f, 659f, 880f }, 0.1f);
         sOver = MakeSeq(new[] { 392f, 330f, 262f, 196f }, 0.16f);
-        bgmClip = BuildBgm();
+        // BGM 음원 파일 우선 (없으면 절차 합성 예비).
+        // 이 과정을 하는 이유: 씬이 매번 재생성돼서 인스펙터 참조가 안 살아남으니 Resources 로드가 필요하고,
+        // 파일이 빠져도 무음으로 죽지 않게 예비가 있기 때문.
+        // 출처 주의: bgm_nes.mp3는 외부 리믹스 음원 (연습용 팬메이드로 사용자 확인 후 사용, 정식 배포 전 교체 필요).
+        bgmClip = Resources.Load<AudioClip>("Audio/bgm_nes");
+        if (bgmClip == null) bgmClip = BuildBgm();
         if (bgm != null) { bgm.clip = bgmClip; bgm.Play(); }
     }
 
