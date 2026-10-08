@@ -174,3 +174,13 @@ $env:TETRIS_BUILD_OUT = "<출력경로>"
 - 함정(신규): `Copy-Item srcDir destDir`는 dest 존재 시 중첩 복사됨 (`Build\Build` 사고). 내용은 `Build\WebGL_V2\Build\*` 와일드카드로 복사할 것
 - 부산물: `EditorSettings.asset` 스모크 흔적은 원복 (커밋 제외 유지). `V2.unity`·폰트SDF는 재생성물이라 커밋 (폰트 diff는 Thin Atlas 순서만 변경, 글리프 정상)
 - 미결: BGM 소리는 헤드리스 확인 불가 → 실기 플레이 시 확인. 푸시는 사용자 몫 (미푸시)
+
+## 세션 기록 (2026-10-08, V2 빌드5 — 영어UI+굵은폰트+게임오버곡 실기)
+- 결과: `Succeeded totalBytes=14007365` (`v2player5.log:2214`, 빌드4 대비 +769B)
+- 사전 스모크: `v2smoke6.log` `PASS (frames=90, hud=True, SCORE 영어, blocks=16, audio=True)` + MissingReference/NullReference 0건
+- 포함분(빌드4 이후 전부): 키보드전용 영어UI(패드/Hint/SND 제거·PAUSE 1종), 미리보기 알파 0.1→0.25, 굵은폰트(Bold+외곽선 0.15), 게임오버곡 첫 내장. BGM·블럭색·과일은 동결 유지
+- 함정(신규): TMP `outlineWidth` setter는 끊어진 공유 머티리얼에서 MissingReference(1619)/NullReference(1621). 패키지 원본(`TextMeshProUGUI.cs:1609-1622`)이 무방비 역참조라 `== null` 가드로 못 막음. 우회: 직접 복제한 인스턴스 머티리얼에 셰이더 값 기록 후 교체 (`ThickenTMP`)
+- 함정(재확인): `& Unity.exe` 셸 즉시복귀 → 실프로세스 별도 진행. `Exiting batchmode` 대기자로 확인 후 복사. CDP 스크린샷 base64는 64KB 초과 분할 수신 → EndOfMessage까지 이어붙일 것. 검증 스크립트 `Temp/opencode/verify-v2b5.ps1` (에러수집+캡처 일체형)
+- 검증: CDP 에러 0 + 로딩바 사라짐 + GAME OVER/SCORE/RESTART·HOLD/NEXT 영어 + 과일블럭 + 굵은폰트 정상 (무입력 방치 게임오버, `Temp/opencode/v2b5.png`)
+- 배포: 바탕화면 `TetrisWebGL_V2_Play` 갱신 + itch zip 재생성 (13,734,242B, 17엔트리). 서버 8080 정리済 (PID 특정 kill)
+- 다음: itch.io 서비스 배포
