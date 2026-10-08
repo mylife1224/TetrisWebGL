@@ -955,7 +955,7 @@ public class TetrisGameV2 : MonoBehaviour
             if (totalLines / 10 + 1 > level)
             {
                 level = totalLines / 10 + 1;
-                dropInterval = Mathf.Max(0.05f, 0.5f - (level - 1) * 0.04f);
+                dropInterval = Mathf.Max(0.05f, 0.5f * Mathf.Pow(1f / 1.1f, level - 1)); // 레벨마다 속도 10% 증가 (복리)
                 if (bgm != null) bgm.pitch = 1f + Mathf.Min(0.12f, (level - 1) * 0.015f); // 레벨업마다 살짝 빨라짐
                 PopupScore(new Vector3(TetrisCore.Width / 2f - 0.5f, TetrisCore.Height / 2f, -1f), "LEVEL UP", Color.cyan);
                 Play(sLevel);
