@@ -193,3 +193,11 @@ $env:TETRIS_BUILD_OUT = "<출력경로>"
 - 검증: CDP 에러 0 + 로딩바 사라짐 + GAME OVER/SCORE/RESTART·HOLD/NEXT·과일블럭 정상 (무입력 방치 게임오버)
 - 배포: 바탕화면 `TetrisWebGL_V2_Play` 갱신 (index.html+Build+TemplateData 내용물 복사) + itch zip 재생성 (13,734,242B, 17엔트리, zip 내 타이틀 확인済). 서버 8080 정리済
 - 다음: itch.io 서비스 배포 (페이지 설정값은 전 세션 전달済)
+
+## 세션 기록 (2026-10-08, itch 404 원인 확정 — zip 역슬래시)
+- 증상: `index.html` 200인데 `Build/*`·`TemplateData/*` 전부 404. Run game 눌러도 빈 화면
+- 확실한 부분: `Compress-Archive`가 만든 zip 엔트리명이 역슬래시(`Build\...`)라 itch 리눅스 추출기가 폴더가 아닌 파일명 문자 그대로 저장. 검증: `Build%5CWebGL_V2.loader.js` 요청 시 200+로더 본문 반환 (파일은 서버에 있음, 경로만 어긋남)
+- 추정한 부분 없음 (실측 확정)
+- 수정: .NET `CreateEntryFromFile`에 `/` 상대경로로 직접 기입 (`Temp/opencode/zipfix.ps1`). 17엔트리·역슬래시 0개 확인. 로컬 검증이 항상 통과했던 이유: Windows/Expand-Archive는 `\`를 구분자로 정상 처리해서 문제 가림
+- 함정(신규): itch용 zip은 `Compress-Archive` 금지. `/` 엔트리명으로 만들 것. 빌드6 게임 내용물 변경 없음 (zip 포장만 수정, 바이트수 동일 13,734,242B)
+- 다음: 위 zip 재업로드 (기존 삭제→업로드→브라우저실행 체크→Save→해제 대기→강제새로고침 후 Run game)
