@@ -61,8 +61,10 @@ public class TetrisGameV2 : MonoBehaviour
 
     // 오디오 (절차적 합성, 에셋 없음)
     AudioSource sfx;
+    AudioSource bgm; // BGM 전용 (루프, SFX와 분리)
     AudioClip sMove, sRotate, sLock, sHold, sPause, sLevel, sOver;
     AudioClip sClear1, sClear2, sClear3, sTetris;
+    AudioClip bgmClip;
     bool muted;
 
     // UI
@@ -320,6 +322,11 @@ public class TetrisGameV2 : MonoBehaviour
         sfx.playOnAwake = false;
         muted = PlayerPrefs.GetInt("tetris_mute", 0) == 1;
         sfx.mute = muted;
+        bgm = gameObject.AddComponent<AudioSource>();
+        bgm.playOnAwake = false;
+        bgm.loop = true;
+        bgm.volume = 0.5f;
+        bgm.mute = muted;
     }
 
     AudioClip MakeTone(float freq, float dur, float vol = 0.35f)
@@ -351,6 +358,65 @@ public class TetrisGameV2 : MonoBehaviour
         return c;
     }
 
+    // 8비트 BGM (코로베이니키 선율+베이스 루프, 코드 합성이라 에셋·용량·라이선스 부담 없음).
+    // 이 과정을 하는 이유: 음원 파일을 넣으면 빌드 용량과 itch.io 배포물이 커지고,
+    // 전통 민요 선율은 저작권 걱정 없이 테트리스 정체성을 살리기 때문.
+    bool bgmNeedStart = true;
+    AudioClip BuildBgm()
+    {
+        const float beat = 0.23f;
+        const int rate = 22050;
+        // (midi, 박). -1 = 쉼표. E5=76 B4=71 C5=72 D5=74 A4=69 F5=77 A5=81 G5=79
+        var mel = new (int m, float b)[]
+        {
+            (76,1),(71,.5f),(72,.5f),(74,1),(72,.5f),(71,.5f),(69,1),(69,.5f),(72,.5f),
+            (76,1),(74,.5f),(72,.5f),(71,1.5f),(72,.5f),(74,1),(76,1),(72,1),(69,1),(69,1),
+            (-1,.5f),(74,1.5f),(77,.5f),(81,1),(79,.5f),(77,.5f),(76,1.5f),(72,.5f),
+            (76,1),(74,.5f),(72,.5f),(71,1),(71,.5f),(72,.5f),(74,1),(76,1),(72,1),(69,1),(69,1),(-1,1),
+        };
+        float totalBeats = 0;
+        foreach (var n in mel) totalBeats += n.b;
+        int total = (int)(rate * totalBeats * beat);
+        var d = new float[total];
+        float t = 0;
+        foreach (var n in mel)
+        {
+            int len = (int)(rate * n.b * beat);
+            int start = (int)(rate * t * beat);
+            if (n.m >= 0)
+            {
+                float f = 440f * Mathf.Pow(2f, (n.m - 69) / 12f);
+                for (int i = 0; i < len && start + i < total; i++)
+                {
+                    float tt = (float)i / rate;
+                    float env = Mathf.Min(1f, tt / 0.008f) * Mathf.Min(1f, (len - i) / (rate * 0.03f));
+                    float ph = 2f * Mathf.PI * f * tt;
+                    d[start + i] += 0.14f * env * (Mathf.Sin(ph) + Mathf.Sin(3f * ph) / 3f + Mathf.Sin(5f * ph) / 5f);
+                }
+            }
+            t += n.b;
+        }
+        int[] roots = { 45, 40, 41, 43, 40, 45, 40, 45 }; // A2 E2 F2 G2 순환 베이스
+        const float barBeats = 4f;
+        int nbars = Mathf.CeilToInt(totalBeats / barBeats);
+        for (int bar = 0; bar < nbars; bar++)
+        {
+            float f = 440f * Mathf.Pow(2f, (roots[bar % roots.Length] - 69) / 12f);
+            int start = (int)(rate * bar * barBeats * beat);
+            int len = (int)(rate * barBeats * beat);
+            for (int i = 0; i < len && start + i < total; i++)
+            {
+                float tt = (float)i / rate;
+                float env = Mathf.Min(1f, tt / 0.01f) * Mathf.Exp(-1.2f * tt / (barBeats * beat));
+                float ph = 2f * Mathf.PI * f * tt;
+                d[start + i] += 0.10f * env * (Mathf.Sin(ph) + Mathf.Sin(3f * ph) / 3f);
+            }
+        }
+        var c = AudioClip.Create("bgm", total, 1, rate, false);
+        c.SetData(d, 0);
+        return c;
+    }
+
     void BuildClips()
     {
         sMove = MakeTone(660f, 0.05f, 0.22f);
@@ -364,6 +430,8 @@ public class TetrisGameV2 : MonoBehaviour
         sTetris = MakeSeq(new[] { 523f, 659f, 784f, 1046f, 1318f }, 0.09f);
         sLevel = MakeSeq(new[] { 440f, 554f, 659f, 880f }, 0.1f);
         sOver = MakeSeq(new[] { 392f, 330f, 262f, 196f }, 0.16f);
+        bgmClip = BuildBgm();
+        if (bgm != null) { bgm.clip = bgmClip; bgm.Play(); }
     }
 
     void Play(AudioClip c, float v = 1f)
@@ -596,6 +664,7 @@ public class TetrisGameV2 : MonoBehaviour
                 if (fixedCubes[x, y] != null) { Destroy(fixedCubes[x, y]); fixedCubes[x, y] = null; }
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         if (pausePanel != null) pausePanel.SetActive(false);
+        if (bgm != null) { bgm.pitch = 1f; if (!bgm.isPlaying) bgm.Play(); }
         UpdateScoreUI();
         RefreshHoldPreview();
         SpawnNext();
@@ -624,6 +693,13 @@ public class TetrisGameV2 : MonoBehaviour
 
     void Update()
     {
+        // WebGL은 첫 제스처 전까지 오디오가 잠겨 있어서 입력이 들어오면 BGM 시작.
+        // 이 과정을 하는 이유: Awake에서 Play해도 suspended 상태라 무음으로 끝나버리기 때문.
+        if (bgmNeedStart && bgm != null && (Input.anyKeyDown || Input.touchCount > 0 || Input.GetMouseButtonDown(0)))
+        {
+            bgmNeedStart = false;
+            bgm.Play();
+        }
         if (gameOver)
         {
             if (Input.GetKeyDown(KeyCode.R)) Restart();
@@ -713,6 +789,7 @@ public class TetrisGameV2 : MonoBehaviour
         if (gameOver) return;
         paused = !paused;
         if (pausePanel != null) pausePanel.SetActive(paused);
+        if (bgm != null) { if (paused) bgm.Pause(); else bgm.UnPause(); }
         Play(sPause);
     }
 
@@ -737,6 +814,7 @@ public class TetrisGameV2 : MonoBehaviour
     {
         muted = !muted;
         if (sfx != null) sfx.mute = muted;
+        if (bgm != null) bgm.mute = muted;
         PlayerPrefs.SetInt("tetris_mute", muted ? 1 : 0);
         PlayerPrefs.Save();
         ApplyMuteVisual();
@@ -826,6 +904,7 @@ public class TetrisGameV2 : MonoBehaviour
             {
                 level = totalLines / 10 + 1;
                 dropInterval = Mathf.Max(0.05f, 0.5f - (level - 1) * 0.04f);
+                if (bgm != null) bgm.pitch = 1f + Mathf.Min(0.12f, (level - 1) * 0.015f); // 레벨업마다 살짝 빨라짐
                 PopupScore(new Vector3(TetrisCore.Width / 2f - 0.5f, TetrisCore.Height / 2f, -1f), "LEVEL UP", Color.cyan);
                 Play(sLevel);
             }
