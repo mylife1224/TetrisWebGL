@@ -35,7 +35,10 @@ public class TetrisGameV2 : MonoBehaviour
 
     GameObject[,] fixedCubes = new GameObject[TetrisCore.Width, TetrisCore.Height];
     List<GameObject> activeCubes = new();
-    readonly List<TextMeshProUGUI> popups = new();
+    TextMeshProUGUI popupLabel; // 단일 슬롯 (동시 팝업 겹침이 밑줄처럼 보여서)
+    Vector3 popupWorld;
+    float popupT;
+    const float PopupLife = 0.9f;
     List<GameObject> ghostCubes = new();
     List<GameObject> previewQuads = new();
     List<GameObject> nextMinis = new();
@@ -838,8 +841,8 @@ public class TetrisGameV2 : MonoBehaviour
         if (mainCam != null) mainCam.transform.position = camBasePos;
         foreach (var c in activeCubes) Destroy(c);
         activeCubes.Clear();
-        foreach (var p in popups) if (p != null) Destroy(p.gameObject);
-        popups.Clear();
+        if (popupLabel != null) popupLabel.gameObject.SetActive(false);
+        popupT = PopupLife;
         ClearMinis(nextMinis);
         ClearMinis(holdMinis);
         foreach (var g in ghostCubes) Destroy(g);
@@ -902,6 +905,7 @@ public class TetrisGameV2 : MonoBehaviour
         HandleGravity();
         RefreshActiveCubes();
         UpdateParticles(Time.deltaTime);
+        TickPopup(Time.deltaTime);
         if (Screen.width != lastScreenW || Screen.height != lastScreenH ||
             (uiCanvas != null && !Mathf.Approximately(uiCanvas.scaleFactor, lastSf))) LayoutSideLabels();
     }
@@ -1144,28 +1148,32 @@ public class TetrisGameV2 : MonoBehaviour
 
     void PopupScore(Vector3 pos, string text, Color color)
     {
-        var tmp = MakeCanvasLabel("Popup", text, 90, color);
-        ((RectTransform)tmp.transform).sizeDelta = new Vector2(520, 110);
-        popups.Add(tmp);
-        StartCoroutine(PopupRise(tmp, pos));
+        // 새 삭제가 들어오면 기존 팝업을 교체 (겹쳐서 밑줄처럼 보이는 것 방지)
+        if (popupLabel == null)
+        {
+            popupLabel = MakeCanvasLabel("Popup", text, 90, color);
+            ((RectTransform)popupLabel.transform).sizeDelta = new Vector2(520, 110);
+        }
+        popupLabel.text = text;
+        popupLabel.color = color;
+        var m = popupLabel.fontSharedMaterial;
+        if (m != null && m.HasProperty(ShaderUtilities.ID_OutlineColor))
+            m.SetColor(ShaderUtilities.ID_OutlineColor, color);
+        popupWorld = pos;
+        popupT = 0;
+        popupLabel.alpha = 1;
+        popupLabel.gameObject.SetActive(true);
+        PlaceWorldAtScreen(popupLabel, popupWorld);
     }
 
-    IEnumerator PopupRise(TextMeshProUGUI tmp, Vector3 world)
+    void TickPopup(float dt)
     {
-        float t = 0;
-        while (t < 0.9f && tmp != null)
-        {
-            t += Time.deltaTime;
-            world += Vector3.up * Time.deltaTime * 2f;
-            PlaceWorldAtScreen(tmp, world);
-            tmp.alpha = 1f - t / 0.9f;
-            yield return null;
-        }
-        if (tmp != null)
-        {
-            popups.Remove(tmp);
-            Destroy(tmp.gameObject);
-        }
+        if (popupLabel == null || !popupLabel.gameObject.activeSelf) return;
+        popupT += dt;
+        if (popupT >= PopupLife) { popupLabel.gameObject.SetActive(false); return; }
+        popupWorld += Vector3.up * dt * 2f;
+        PlaceWorldAtScreen(popupLabel, popupWorld);
+        popupLabel.alpha = 1f - popupT / PopupLife;
     }
 
     // ---------- 고스트 + 삭제 예고 ----------
