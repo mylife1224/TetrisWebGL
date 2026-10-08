@@ -243,3 +243,11 @@ $env:TETRIS_BUILD_OUT = "<출력경로>"
 - 적용: `e760d32` 폰트 쉐이더 1줄+프로퍼티 목록 교체 (중복·유령 참조 없음 검수済). `3cdfe7d` 프리팹 변경은 불필요해서 `244c9d9`로 원복 (불필요 변경은 넣지 않는 원칙)
 - 함정(신규): 에디터에서 폰트 에셋 저장 시 Material 서브에셋 복제事故 가능 (유령 텍스처 ID → 네모). 폰트 diff는 매번 fileID 유령 여부 확인
 - 다음: main 병합済. 빌드8 요청 시 스모크→빌드→CDP(SSD 렌더 검증)→배포
+
+## 세션 기록 (2026-10-08, V2 빌드8 — SSD 실기)
+- 결과: `Succeeded totalBytes=14007680` (`v2player8.log:2236`). 로그에 `TMP_SDF-Mobile SSD.shader` 포함 확인 (8.7kb)
+- 함정(신규): `CreateStatic`이 폰트를 재생성해서 stock DF로 돌아감. 빌드 파이프라인에 `EnsureSsdFontMaterial` 추가 (`7837ffc`) — 에디터 단계라 Shader.Find 가능. 없으면 실행본에 SSD 안 들어감
+- 포함분: SSD 폰트, 팝업 단일슬롯+90pt, 점수 3줄, UGUI 라벨, BGM 5%
+- 검증: CDP 에러 0 + 3줄 점수·HOLD/NEXT·GAME OVER 전부 SSD로 깨끗 (`Temp/opencode/v2b8.png`)
+- 배포: 바탕화면 `TetrisWebGL_V2_Play` 갱신 + itch zip 재생성 (`/` 17엔트리, 13,733,167B). 서버 8080 정리済
+- 다음: itch 재업로드 (기존 삭제→업로드→체크→Save→대기→새로고침→Run game)
