@@ -118,4 +118,5 @@ $env:TETRIS_BUILD_OUT = "<출력경로>"
 - `c7450d8` (main, 미푸시): 절차적 8비트 코로베이니키 루프 (`BuildBgm`, 에셋 없음, 약 7.24초)
 - 선율 검증: Unity 빌드 없이 동일 수식을 WAV 렌더 (`Temp/opencode/bgm_test.wav`) — 피크 0.223 무클리핑, 루프 이음새 0.018 무클릭. 사용자 시聴 OK
 - 연동: BGM 전용 소스(루프) + SND 음소거/일시정지/레벨별 피치 상승. WebGL 첫 제스처 오디오 잠금 대비 입력 시 재생시도
+- 템포 0.24 확정 + 참고용 샘플 `Reference/bgm_sample.wav` 커밋 (게임은 코드 합성 재생, 파일은 빌드 미포함)
 - 다음 빌드(`BuildV2Player`)에 폴리싱 1차 + BGM 일괄 포함 예정
