@@ -715,7 +715,7 @@ public class TetrisGameV2 : MonoBehaviour
                 if (fixedCubes[x, y] != null) { Destroy(fixedCubes[x, y]); fixedCubes[x, y] = null; }
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         if (pausePanel != null) pausePanel.SetActive(false);
-        if (bgm != null) { bgm.pitch = 1f; if (!bgm.isPlaying) bgm.Play(); }
+        if (bgm != null) { bgm.pitch = 0.7f; if (!bgm.isPlaying) bgm.Play(); }
         UpdateScoreUI();
         RefreshHoldPreview();
         SpawnNext();
@@ -956,7 +956,7 @@ public class TetrisGameV2 : MonoBehaviour
             {
                 level = totalLines / 10 + 1;
                 dropInterval = Mathf.Max(0.05f, 0.5f * Mathf.Pow(1f / 1.1f, level - 1)); // 레벨마다 속도 10% 증가 (복리)
-                if (bgm != null) bgm.pitch = 1f + Mathf.Min(0.12f, (level - 1) * 0.015f); // 레벨업마다 살짝 빨라짐
+                if (bgm != null) bgm.pitch = Mathf.Min(1.4f, 0.7f * Mathf.Pow(1.1f, level - 1)); // 낙하속도와 같은 10% 복리
                 PopupScore(new Vector3(TetrisCore.Width / 2f - 0.5f, TetrisCore.Height / 2f, -1f), "LEVEL UP", Color.cyan);
                 Play(sLevel);
             }
