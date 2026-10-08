@@ -201,3 +201,4 @@ $env:TETRIS_BUILD_OUT = "<출력경로>"
 - 수정: .NET `CreateEntryFromFile`에 `/` 상대경로로 직접 기입 (`Temp/opencode/zipfix.ps1`). 17엔트리·역슬래시 0개 확인. 로컬 검증이 항상 통과했던 이유: Windows/Expand-Archive는 `\`를 구분자로 정상 처리해서 문제 가림
 - 함정(신규): itch용 zip은 `Compress-Archive` 금지. `/` 엔트리명으로 만들 것. 빌드6 게임 내용물 변경 없음 (zip 포장만 수정, 바이트수 동일 13,734,242B)
 - 다음: 위 zip 재업로드 (기존 삭제→업로드→브라우저실행 체크→Save→해제 대기→강제새로고침 후 Run game)
+- 결과: `/` zip 재업로드 후 정상 실행 확인 (사용자 실기 OK). 첫 itch.io 서비스 개시
