@@ -250,4 +250,5 @@ $env:TETRIS_BUILD_OUT = "<출력경로>"
 - 포함분: SSD 폰트, 팝업 단일슬롯+90pt, 점수 3줄, UGUI 라벨, BGM 5%
 - 검증: CDP 에러 0 + 3줄 점수·HOLD/NEXT·GAME OVER 전부 SSD로 깨끗 (`Temp/opencode/v2b8.png`)
 - 배포: 바탕화면 `TetrisWebGL_V2_Play` 갱신 + itch zip 재생성 (`/` 17엔트리, 13,733,167B). 서버 8080 정리済
-- 다음: itch 재업로드 (기존 삭제→업로드→체크→Save→대기→새로고침→Run game)
+- 결과: 빌드8 zip 재업로드 후 정상 작동 확인 (사용자 실기 OK). 밑줄·속빈 글자 종결. SSD가 최종 폰트 경로로 확정
+- 다음: 추가 폴리싱 (다음 세션). BGM 자작 교체는 별도 미결 유지
