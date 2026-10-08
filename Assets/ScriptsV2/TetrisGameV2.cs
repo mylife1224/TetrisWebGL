@@ -35,7 +35,7 @@ public class TetrisGameV2 : MonoBehaviour
 
     GameObject[,] fixedCubes = new GameObject[TetrisCore.Width, TetrisCore.Height];
     List<GameObject> activeCubes = new();
-    readonly List<GameObject> popups = new();
+    readonly List<TextMeshProUGUI> popups = new();
     List<GameObject> ghostCubes = new();
     List<GameObject> previewQuads = new();
     List<GameObject> nextMinis = new();
@@ -566,12 +566,12 @@ public class TetrisGameV2 : MonoBehaviour
         // 이 과정을 하는 이유: 3D 텍스트는 카메라·SDF 스케일에 흔들려 속빈 글자가 됐고,
         // UGUI(SCORE 렌더 경로)는 검증済라서 같은 고생을 반복하지 않기 위함.
         // 배경이 코드 생성이라 앵커를 못 잡는 문제는 WorldToScreenPoint 환산으로 우회 (보드 추적 유지).
-        holdLabel = MakeCanvasLabel("HoldLabel", "HOLD", 24);
-        nextLabel = MakeCanvasLabel("NextLabel", "NEXT", 24);
+        holdLabel = MakeCanvasLabel("HoldLabel", "HOLD", 24, Color.white);
+        nextLabel = MakeCanvasLabel("NextLabel", "NEXT", 24, Color.white);
         LayoutSideLabels();
     }
 
-    TextMeshProUGUI MakeCanvasLabel(string name, string text, int size)
+    TextMeshProUGUI MakeCanvasLabel(string name, string text, int size, Color color)
     {
         var go = new GameObject(name);
         go.transform.SetParent(uiCanvas.transform, false);
@@ -581,7 +581,7 @@ public class TetrisGameV2 : MonoBehaviour
         var tmp = go.AddComponent<TextMeshProUGUI>();
         tmp.text = text; tmp.fontSize = size;
         tmp.alignment = TextAlignmentOptions.Center;
-        tmp.font = uiFont; tmp.raycastTarget = false;
+        tmp.font = uiFont; tmp.color = color; tmp.raycastTarget = false;
         ThickenTMP(tmp);
         return tmp;
     }
@@ -598,7 +598,13 @@ public class TetrisGameV2 : MonoBehaviour
 
     void PlaceSideLabel(TextMeshProUGUI tmp, Vector3 world)
     {
-        if (tmp == null) return;
+        PlaceWorldAtScreen(tmp, world);
+    }
+
+    // 월드 좌표를 캔버스 앵커 좌표로 환산 (UGUI 팝업·라벨 공용)
+    void PlaceWorldAtScreen(TMP_Text tmp, Vector3 world)
+    {
+        if (tmp == null || mainCam == null || uiCanvas == null) return;
         Vector3 sp = mainCam.WorldToScreenPoint(world);
         float sf = uiCanvas.scaleFactor;
         if (sf <= 0) sf = 1;
@@ -606,22 +612,9 @@ public class TetrisGameV2 : MonoBehaviour
             new Vector2(sp.x - Screen.width / 2f, sp.y - Screen.height / 2f) / sf;
     }
 
-    TextMeshPro MakeWorldLabel(string text, Vector3 pos, float fontSize, float scale, Color color)
-    {
-        var go = new GameObject("WLabel");
-        go.transform.position = pos;
-        go.transform.localScale = Vector3.one * scale;
-        go.transform.parent = boardRoot.transform;
-        var tmp = go.AddComponent<TextMeshPro>();
-        tmp.text = text;
-        tmp.fontSize = fontSize;
-        tmp.alignment = TextAlignmentOptions.Center;
-        tmp.font = uiFont;
-        tmp.color = color;
-        tmp.isOrthographic = true; // 카메라가 orthographic이므로 (SetupCamera). false면 SDF 스케일이 어긋나 외곽선이 속을 삼켜 속빈 글자가 됨
-        ThickenTMP(tmp);
-        return tmp;
-    }
+    // (3D 월드 라벨은 UGUI로 전환되어 삭제됨. 팝업 포함 전 텍스트 UGUI)
+
+    // 전 라벨 두껍게 (Bold + 외곽선). 이 과정을 하는 이유: static bake SDF는
 
     // 전 라벨 두껍게 (Bold + 외곽선). 이 과정을 하는 이유: static bake SDF는
     // Bold 웨이트가 따로 구워져 있지 않아 fontStyle만으로는 두꺼워지지 않을 수 있고,
@@ -845,7 +838,7 @@ public class TetrisGameV2 : MonoBehaviour
         if (mainCam != null) mainCam.transform.position = camBasePos;
         foreach (var c in activeCubes) Destroy(c);
         activeCubes.Clear();
-        foreach (var p in popups) if (p != null) Destroy(p);
+        foreach (var p in popups) if (p != null) Destroy(p.gameObject);
         popups.Clear();
         ClearMinis(nextMinis);
         ClearMinis(holdMinis);
@@ -1151,24 +1144,26 @@ public class TetrisGameV2 : MonoBehaviour
 
     void PopupScore(Vector3 pos, string text, Color color)
     {
-        var tmp = MakeWorldLabel(text, pos, 64, 0.2f, color);
-        popups.Add(tmp.gameObject);
-        StartCoroutine(PopupRise(tmp));
+        var tmp = MakeCanvasLabel("Popup", text, 30, color);
+        ((RectTransform)tmp.transform).sizeDelta = new Vector2(320, 48);
+        popups.Add(tmp);
+        StartCoroutine(PopupRise(tmp, pos));
     }
 
-    IEnumerator PopupRise(TextMeshPro tmp)
+    IEnumerator PopupRise(TextMeshProUGUI tmp, Vector3 world)
     {
         float t = 0;
         while (t < 0.9f && tmp != null)
         {
             t += Time.deltaTime;
-            tmp.transform.position += Vector3.up * Time.deltaTime * 2f;
+            world += Vector3.up * Time.deltaTime * 2f;
+            PlaceWorldAtScreen(tmp, world);
             tmp.alpha = 1f - t / 0.9f;
             yield return null;
         }
         if (tmp != null)
         {
-            popups.Remove(tmp.gameObject);
+            popups.Remove(tmp);
             Destroy(tmp.gameObject);
         }
     }
