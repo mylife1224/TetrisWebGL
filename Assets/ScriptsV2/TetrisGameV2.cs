@@ -77,6 +77,8 @@ public class TetrisGameV2 : MonoBehaviour
     GameObject gameOverPanel;
     TextMeshProUGUI finalScoreText;
     GameObject pausePanel;
+    TextMeshProUGUI holdLabel, nextLabel; // 캔버스 라벨 (미니는 월드 유지)
+    int lastScreenW, lastScreenH;
 
     // 홀드 반복 (DAS: 첫 반복까지 대기, ARR: 이후 반복 간격)
     float repLeft, repRight;
@@ -559,8 +561,47 @@ public class TetrisGameV2 : MonoBehaviour
 
     void SetupWorldSidePanels()
     {
-        MakeWorldLabel("NEXT", new Vector3(12.2f, 15.2f, 0), 64, 0.10f, Color.white);
-        MakeWorldLabel("HOLD", new Vector3(-2.6f, 15.2f, 0), 64, 0.10f, Color.white);
+        // HOLD/NEXT는 UGUI 라벨(미니 블록은 월드 유지).
+        // 이 과정을 하는 이유: 3D 텍스트는 카메라·SDF 스케일에 흔들려 속빈 글자가 됐고,
+        // UGUI(SCORE 렌더 경로)는 검증済라서 같은 고생을 반복하지 않기 위함.
+        // 배경이 코드 생성이라 앵커를 못 잡는 문제는 WorldToScreenPoint 환산으로 우회 (보드 추적 유지).
+        holdLabel = MakeCanvasLabel("HoldLabel", "HOLD", 24);
+        nextLabel = MakeCanvasLabel("NextLabel", "NEXT", 24);
+        LayoutSideLabels();
+    }
+
+    TextMeshProUGUI MakeCanvasLabel(string name, string text, int size)
+    {
+        var go = new GameObject(name);
+        go.transform.SetParent(uiCanvas.transform, false);
+        var rt = go.AddComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0.5f);
+        rt.sizeDelta = new Vector2(220, 44);
+        var tmp = go.AddComponent<TextMeshProUGUI>();
+        tmp.text = text; tmp.fontSize = size;
+        tmp.alignment = TextAlignmentOptions.Center;
+        tmp.font = uiFont; tmp.raycastTarget = false;
+        ThickenTMP(tmp);
+        return tmp;
+    }
+
+    // 월드 미니 위를 화면 좌표로 환산해 배치 (해상도 변경 시에만 재계산)
+    void LayoutSideLabels()
+    {
+        if (mainCam == null || uiCanvas == null) return;
+        PlaceSideLabel(holdLabel, new Vector3(-2.6f, 15.2f, 0));
+        PlaceSideLabel(nextLabel, new Vector3(12.2f, 15.2f, 0));
+        lastScreenW = Screen.width; lastScreenH = Screen.height;
+    }
+
+    void PlaceSideLabel(TextMeshProUGUI tmp, Vector3 world)
+    {
+        if (tmp == null) return;
+        Vector3 sp = mainCam.WorldToScreenPoint(world);
+        float sf = uiCanvas.scaleFactor;
+        if (sf <= 0) sf = 1;
+        ((RectTransform)tmp.transform).anchoredPosition =
+            new Vector2(sp.x - Screen.width / 2f, sp.y - Screen.height / 2f) / sf;
     }
 
     TextMeshPro MakeWorldLabel(string text, Vector3 pos, float fontSize, float scale, Color color)
@@ -853,6 +894,7 @@ public class TetrisGameV2 : MonoBehaviour
         HandleGravity();
         RefreshActiveCubes();
         UpdateParticles(Time.deltaTime);
+        if (Screen.width != lastScreenW || Screen.height != lastScreenH) LayoutSideLabels();
     }
 
     void LateUpdate()
