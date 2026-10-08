@@ -184,3 +184,12 @@ $env:TETRIS_BUILD_OUT = "<출력경로>"
 - 검증: CDP 에러 0 + 로딩바 사라짐 + GAME OVER/SCORE/RESTART·HOLD/NEXT 영어 + 과일블럭 + 굵은폰트 정상 (무입력 방치 게임오버, `Temp/opencode/v2b5.png`)
 - 배포: 바탕화면 `TetrisWebGL_V2_Play` 갱신 + itch zip 재생성 (13,734,242B, 17엔트리). 서버 8080 정리済 (PID 특정 kill)
 - 다음: itch.io 서비스 배포
+
+## 세션 기록 (2026-10-08, V2 빌드6 — FruiTetris 타이틀 실기)
+- 결과: `Succeeded totalBytes=14007400` (`v2player6.log:2201`, 빌드5 대비 +35B)
+- 사전 스모크: `v2smoke7.log:409` `PASS (frames=90, hud=True, SCORE, blocks=16, audio=True)`
+- 포함분: `productName FruiTetris` (`da71a3d`, index.html 타이틀 확인済). 게임 내용물은 빌드5와 동일
+- 함정(신규): 스모크 대기자는 `SMOKE frames`로 (자체 종료라 `Exiting batchmode` 없음, `-quit` 금지 유지). 빌드 인라인 `-Command`의 `\"` 이스케이프 파서 에러 → 파일 스크립트(`Temp/opencode/v2build6b.ps1`)로 우회
+- 검증: CDP 에러 0 + 로딩바 사라짐 + GAME OVER/SCORE/RESTART·HOLD/NEXT·과일블럭 정상 (무입력 방치 게임오버)
+- 배포: 바탕화면 `TetrisWebGL_V2_Play` 갱신 (index.html+Build+TemplateData 내용물 복사) + itch zip 재생성 (13,734,242B, 17엔트리, zip 내 타이틀 확인済). 서버 8080 정리済
+- 다음: itch.io 서비스 배포 (페이지 설정값은 전 세션 전달済)
