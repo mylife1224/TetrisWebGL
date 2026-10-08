@@ -575,6 +575,7 @@ public class TetrisGameV2 : MonoBehaviour
         tmp.alignment = TextAlignmentOptions.Center;
         tmp.font = uiFont;
         tmp.color = color;
+        tmp.isOrthographic = true; // 카메라가 orthographic이므로 (SetupCamera). false면 SDF 스케일이 어긋나 외곽선이 속을 삼켜 속빈 글자가 됨
         ThickenTMP(tmp);
         return tmp;
     }
