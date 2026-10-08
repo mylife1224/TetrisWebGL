@@ -575,7 +575,18 @@ public class TetrisGameV2 : MonoBehaviour
         tmp.alignment = TextAlignmentOptions.Center;
         tmp.font = uiFont;
         tmp.color = color;
+        ThickenTMP(tmp);
         return tmp;
+    }
+
+    // 전 라벨 두껍게 (Bold + 외곽선). 이 과정을 하는 이유: static bake SDF는
+    // Bold 웨이트가 따로 구워져 있지 않아 fontStyle만으로는 두꺼워지지 않을 수 있고,
+    // 글자색과 같은 외곽선이 SDF에서는 확실하게 굵기를 더해주기 때문.
+    static void ThickenTMP(TMP_Text tmp)
+    {
+        tmp.fontStyle = FontStyles.Bold;
+        tmp.outlineWidth = 0.15f;
+        tmp.outlineColor = tmp.color;
     }
 
     void BuildMini(List<GameObject> list, TetrominoType t, Vector3 center, float cell)
@@ -656,6 +667,9 @@ public class TetrisGameV2 : MonoBehaviour
         var sysPad = inst.transform.Find("SysPad");
 
         AddPadButton(btnPrefab, sysPad, "PAUSE", 26, TogglePause);
+
+        // HUD 전 라벨 두껍게 (구/신 프리팹 모두 커버).
+        foreach (var t in inst.GetComponentsInChildren<TMP_Text>(true)) ThickenTMP(t);
 
         WirePanelButton(gameOverPanel?.transform, "RestartBtn", Restart);
         WirePanelButton(pausePanel?.transform, "ResumeBtn", TogglePause);

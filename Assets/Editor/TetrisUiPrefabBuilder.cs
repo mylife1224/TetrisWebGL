@@ -62,6 +62,7 @@ public static class TetrisUiPrefabBuilder
         tmp.text = "BTN"; tmp.fontSize = 44;
         tmp.alignment = TextAlignmentOptions.Center;
         tmp.font = font; tmp.raycastTarget = false; // 클릭은 Image가 받음 (버튼 Image 필수 함정)
+        Thicken(tmp);
         go.AddComponent<TouchHoldButton>(); // held/onTap은 V2가 사용
         PrefabUtility.SaveAsPrefabAsset(go, UiDir + "/PadButton.prefab");
         Object.DestroyImmediate(go);
@@ -111,6 +112,7 @@ public static class TetrisUiPrefabBuilder
         var tmp = go.AddComponent<TextMeshProUGUI>();
         tmp.text = text; tmp.fontSize = size; tmp.alignment = align;
         tmp.font = font; tmp.raycastTarget = false;
+        Thicken(tmp);
         return tmp;
     }
 
@@ -156,6 +158,7 @@ public static class TetrisUiPrefabBuilder
         ttmp.text = title; ttmp.fontSize = titleSize;
         ttmp.alignment = TextAlignmentOptions.Center;
         ttmp.font = font; ttmp.raycastTarget = false;
+        Thicken(ttmp);
 
         if (sub != null)
         {
@@ -167,6 +170,7 @@ public static class TetrisUiPrefabBuilder
             stmp.text = sub; stmp.fontSize = subSize;
             stmp.alignment = TextAlignmentOptions.Center;
             stmp.font = font; stmp.raycastTarget = false;
+            Thicken(stmp);
         }
 
         var bgo = new GameObject(btnName);
@@ -186,7 +190,15 @@ public static class TetrisUiPrefabBuilder
         bltmp.text = btnLabel; bltmp.fontSize = 28;
         bltmp.alignment = TextAlignmentOptions.Center;
         bltmp.font = font; bltmp.color = Color.white; bltmp.raycastTarget = false;
+        Thicken(bltmp);
         go.SetActive(false); // 패널은 꺼진 상태로 저장 (V2가 켬)
+    }
+
+    static void Thicken(TextMeshProUGUI tmp)
+    {
+        tmp.fontStyle = FontStyles.Bold;
+        tmp.outlineWidth = 0.15f;
+        tmp.outlineColor = tmp.color;
     }
 
     static void Verify()
