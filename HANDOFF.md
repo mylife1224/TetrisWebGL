@@ -154,3 +154,12 @@ $env:TETRIS_BUILD_OUT = "<출력경로>"
 - 추정한 부분 겸 결함 고지: 180.7초가 21.3초 루프 배수가 아니라 매 3분마다 중간에 끊기고, MP3 패딩으로 미세 공백 가능. 코드 변환본(`nes_code.wav`, 리드 단독)은 밋밋해서 탈락
 - 출처 주의: mp3hamster 경유 외부 리믹스. 연습용 팬메이드로 사용자 확인済. 정식 배포 전 교체 필요
 - 다음: 빌드3에서 실기 확인
+
+## 세션 기록 (2026-10-08, V2 빌드4 — 중복수정+밸런스 실기+배포)
+- 결과: `Succeeded totalBytes=14006596` (`v2player4.log:2212`, 빌드3 대비 +41B)
+- 사전 스모크: `v2smoke5.log` `PASS (frames=90, audio=True)`. 함정: 스모크에 `-quit` 금지 (스크립트가 직접 종료. `-quit` 주면 90프레임 전 종료돼 SMOKE줄 없음). 셸 즉시복귀 → `Exiting batchmode` 전 로그 확인 필수
+- 검증: CDP 에러 0 + `bar:none` + 960x600 + 과일·한글UI·SWAP·패드 정상 (무입력 방치 게임오버, `v2b4.png`). 스크립트 `Temp/opencode/verify-v2b4.ps1` 신규 (에러수집+상태+캡처 일체형, 기존 cdp_verify+verify-v2build2 조합)
+- 배포: 바탕화면 `TetrisWebGL_V2_Play` 갱신 (ALL-MATCH 바이트 대조済) + itch zip 재생성 (13,732,887B, 17엔트리). v1 손대지 않음. 서버 8080 정리済 (PID 특정 kill)
+- 함정(신규): `Copy-Item srcDir destDir`는 dest 존재 시 중첩 복사됨 (`Build\Build` 사고). 내용은 `Build\WebGL_V2\Build\*` 와일드카드로 복사할 것
+- 부산물: `EditorSettings.asset` 스모크 흔적은 원복 (커밋 제외 유지). `V2.unity`·폰트SDF는 재생성물이라 커밋 (폰트 diff는 Thin Atlas 순서만 변경, 글리프 정상)
+- 미결: BGM 소리는 헤드리스 확인 불가 → 실기 플레이 시 확인. 푸시는 사용자 몫 (미푸시)
