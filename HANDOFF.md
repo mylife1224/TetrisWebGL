@@ -218,3 +218,11 @@ $env:TETRIS_BUILD_OUT = "<출력경로>"
 - 수정: `MakeWorldLabel`에 `tmp.isOrthographic = true` 1줄 (`880cd0f`, 빌드 미반영)
 - 관찰(미확정): 에디터 플레이모드 종료 후 폰트 에셋의 `_ScaleRatioA/C`가 1→0.833/0.677로 자동 변경됨. 런타임이 렌더 기준으로 고친 값이나, 에디터 창 크기 기준일 수 있어 원복. 다음 `BuildV2Player`의 `CreateStatic`이 폰트를 재생성하므로 영향 없음
 - 다음: 사용자 요청 시 빌드7 (스모크→빌드→CDP→배포), BGM 교체와 묶을지 정하기
+
+## 세션 기록 (2026-10-08, HOLD/NEXT UGUI 전환)
+- 변경: 3D 월드 라벨 삭제 → `HoldLabel`·`NextLabel`을 HudCanvas 자식 UGUI로 코드 생성 (`5518c55`). 위치는 `WorldToScreenPoint`로 미니 위 환산, 해상도 변경 시만 재계산. 팝업 점수는 월드 연출이라 3D 유지
+- 이 과정을 하는 이유: 코드 생성 배경이라 앵커를 못 잡는 문제를 보드 추적 유지째 우회 + SCORE 렌더 경로로 통일해 속빈 글자 재발 차단
+- 검증: 스모크 `PASS (frames=90)` + NullReference/MissingReference 0건. 실기 렌더는 빌드7 CDP에서 확인 예정
+- 판정 기준 공유済: 에디터 플레이에서 거대 글자가 사라지면 3D 라벨 경로가 범인. 안 사라지면 별개 원인으로 재진단
+- 관찰(재확인): 플레이모드 종료 후 폰트 `_ScaleRatioA/C` 자동 변경 재발 → 원복 (빌드 시 재생성이라 영향 없음)
+- 다음: 빌드7 요청 대기 (포함분: 속빈수정+UGUI전환+BGM5%+라벨축소 — 단 라벨축소는 UGUI 24pt로 대체됨)
