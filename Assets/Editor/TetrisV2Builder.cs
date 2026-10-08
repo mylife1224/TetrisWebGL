@@ -4,6 +4,7 @@
 using UnityEngine;
 using UnityEditor;
 using UnityEditor.SceneManagement;
+using TMPro;
 
 public static class TetrisV2Builder
 {
@@ -42,11 +43,28 @@ public static class TetrisV2Builder
     // 이 과정을 하는 이유: v1은 참고용 동결이라 V2에 독립 파이프라인이 필요하고,
     // 출력 경로를 분리(Build/WebGL_V2)해야 v1 빌드 산출물을 덮어쓰지 않기 때문.
     // V2.unity는 매번 재생성 (에이전트 소유 자동생성 파일이라 직접 편집 금지).
+    // SSD 폰트 머티리얼 보장 (빌드용).
+    // 이 과정을 하는 이유: CreateStatic이 폰트를 매번 재생성해서 stock DF로 돌아가므로,
+    // 빌드 직후 SSD로 교체해야 실행본에 반영되기 때문. batchmode 에디터라 Shader.Find 사용 가능.
+    // (빌드된 플레이어에서 Shader.Find가 null인 함정과 무관 — 에디터 단계 처리)
+    static void EnsureSsdFontMaterial()
+    {
+        var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/UI/Resources/Fonts/NotoSansKR SDF.asset");
+        if (font == null || font.material == null) { Debug.LogError("[TetrisV2] font/material missing for SSD"); return; }
+        var ssd = Shader.Find("TextMeshPro/Mobile/Distance Field SSD");
+        if (ssd == null) { Debug.LogError("[TetrisV2] SSD shader not found"); return; }
+        font.material.shader = ssd;
+        EditorUtility.SetDirty(font.material);
+        EditorUtility.SetDirty(font);
+        AssetDatabase.SaveAssets();
+        Debug.Log("[TetrisV2] font material -> SSD");
+    }
     public static void BuildV2Player()
     {
         TetrisKoreanFontSetup.ApplyItchio();
         TetrisKoreanFontSetup.EnsureRuntimeMaterials();
         TetrisKoreanFontSetup.CreateStatic();
+        EnsureSsdFontMaterial();
         BuildV2Scene();
         AssetDatabase.Refresh();
         EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true) };
