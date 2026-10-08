@@ -62,6 +62,7 @@ public class TetrisGameV2 : MonoBehaviour
     // 오디오 (절차적 합성, 에셋 없음)
     AudioSource sfx;
     AudioSource bgm; // BGM 전용 (루프, SFX와 분리)
+    static TetrisGameV2 instance; // 중복 인스턴스 감지용
     AudioClip sMove, sRotate, sLock, sHold, sPause, sLevel, sOver;
     AudioClip sClear1, sClear2, sClear3, sTetris;
     AudioClip bgmClip;
@@ -101,6 +102,9 @@ public class TetrisGameV2 : MonoBehaviour
 
     void Awake()
     {
+        if (instance != null && instance != this)
+            Debug.LogError("[TetrisV2] GameV2가 2개! BGM 이중재생 원인. 씬에 GameV2 1개만 둘 것.");
+        instance = this;
         Application.targetFrameRate = 60;
         SetupCamera();
         SetupMaterials();
@@ -478,7 +482,7 @@ public class TetrisGameV2 : MonoBehaviour
         // 출처 주의: bgm_nes.mp3는 외부 리믹스 음원 (연습용 팬메이드로 사용자 확인 후 사용, 정식 배포 전 교체 필요).
         bgmClip = Resources.Load<AudioClip>("Audio/bgm_nes");
         if (bgmClip == null) bgmClip = BuildBgm();
-        if (bgm != null) { bgm.clip = bgmClip; bgm.Play(); }
+        if (bgm != null) { bgm.clip = bgmClip; if (!bgm.isPlaying) bgm.Play(); }
     }
 
     void Play(AudioClip c, float v = 1f)
@@ -741,8 +745,9 @@ public class TetrisGameV2 : MonoBehaviour
     void Update()
     {
         // WebGL은 첫 제스처 전까지 오디오가 잠겨 있어서 입력이 들어오면 BGM 시작.
-        // 이 과정을 하는 이유: Awake에서 Play해도 suspended 상태라 무음으로 끝나버리기 때문.
-        if (bgmNeedStart && bgm != null && (Input.anyKeyDown || Input.touchCount > 0 || Input.GetMouseButtonDown(0)))
+        // isPlaying 조건 필수: Awake에서 이미 재생 중이면 Play()가 처음부터 다시 시작해서
+        // "BGM 두 번 재생"처럼 들리기 때문. (에디터 재현 루트: 시작 직후 첫 클릭)
+        if (bgmNeedStart && bgm != null && !bgm.isPlaying && (Input.anyKeyDown || Input.touchCount > 0 || Input.GetMouseButtonDown(0)))
         {
             bgmNeedStart = false;
             bgm.Play();
