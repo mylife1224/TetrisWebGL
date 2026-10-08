@@ -708,6 +708,19 @@ public class TetrisGameV2 : MonoBehaviour
         uiCanvas = inst.GetComponent<Canvas>();
         scoreText = inst.transform.Find("ScoreText")?.GetComponent<TextMeshProUGUI>();
         comboText = inst.transform.Find("ComboText")?.GetComponent<TextMeshProUGUI>();
+        // 3줄 점수(SCORE/LEVEL/LINES)에 맞춰 박스 키움 + 콤보는 아래로 이동·축소.
+        // 이 과정을 하는 이유: 프리팹 박스(360x70)는 1줄 기준이라 3줄이 삐져나오고 콤보와 겹치기 때문.
+        if (scoreText != null)
+        {
+            var srt = (RectTransform)scoreText.transform;
+            srt.sizeDelta = new Vector2(srt.sizeDelta.x, 124);
+        }
+        if (comboText != null)
+        {
+            var crt = (RectTransform)comboText.transform;
+            crt.anchoredPosition = new Vector2(16, -140);
+            comboText.fontSize = 22;
+        }
         gameOverPanel = inst.transform.Find("GameOverPanel")?.gameObject;
         finalScoreText = gameOverPanel?.transform.Find("PanelSubLabel")?.GetComponent<TextMeshProUGUI>();
         pausePanel = inst.transform.Find("PausePanel")?.gameObject;
@@ -771,7 +784,7 @@ public class TetrisGameV2 : MonoBehaviour
     void UpdateScoreUI()
     {
         if (scoreText != null)
-            scoreText.text = $"SCORE {score}   LV {level}   LINES {totalLines}";
+            scoreText.text = $"SCORE {score}\nLEVEL {level}\nLINES {totalLines}";
         if (comboText != null)
         {
             comboText.gameObject.SetActive(combo >= 2);

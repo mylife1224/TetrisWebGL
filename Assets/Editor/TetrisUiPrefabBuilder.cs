@@ -80,10 +80,11 @@ public static class TetrisUiPrefabBuilder
         scaler.matchWidthOrHeight = 0.5f;
         cgo.AddComponent<GraphicRaycaster>();
 
-        MakeLabel(cgo.transform, font, "ScoreText", new Vector2(0, 1), new Vector2(0, 1),
-            new Vector2(16, -12), 360, "SCORE 0   LV 1   LINES 0", 28, TextAlignmentOptions.TopLeft);
+        var score = MakeLabel(cgo.transform, font, "ScoreText", new Vector2(0, 1), new Vector2(0, 1),
+            new Vector2(16, -12), 360, "SCORE 0\nLEVEL 1\nLINES 0", 28, TextAlignmentOptions.TopLeft);
+        ((RectTransform)score.transform).sizeDelta = new Vector2(360, 124);
         var combo = MakeLabel(cgo.transform, font, "ComboText", new Vector2(0, 1), new Vector2(0, 1),
-            new Vector2(16, -52), 360, "", 24, TextAlignmentOptions.TopLeft);
+            new Vector2(16, -140), 360, "", 22, TextAlignmentOptions.TopLeft);
         combo.gameObject.SetActive(false);
 
         // SysPad 1종 (일시정지 버튼용). 이동/액션 패드와 Hint는 미사용.
