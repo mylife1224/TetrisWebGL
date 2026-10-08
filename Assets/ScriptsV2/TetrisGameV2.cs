@@ -66,6 +66,7 @@ public class TetrisGameV2 : MonoBehaviour
     AudioClip sMove, sRotate, sLock, sHold, sPause, sLevel, sOver;
     AudioClip sClear1, sClear2, sClear3, sTetris;
     AudioClip bgmClip;
+    AudioClip overClip; // 게임오버용 ABAB 슬로우 루프 (메인BGM 파일과 무관하게 상시 절차합성)
     bool muted;
 
     // UI
@@ -463,6 +464,76 @@ public class TetrisGameV2 : MonoBehaviour
         return c;
     }
 
+    // 게임오버 BGM (A-B-A-B 슬로우 루프. 메인BGM이 파일이어도 이건 코드 합성).
+    // A/B 선율을 BuildBgm과 공유하지 않고 복제했다.
+    // 이 과정을 하는 이유: 게임오버곡은 독립 실험 단위라 지우거나 되돌릴 때 한 덩어리로 처리하기 때문.
+    AudioClip BuildOverBgm()
+    {
+        const float beat = 0.62f;
+        const int rate = 22050;
+        var mel = new (int m, float b)[]
+        {
+            (76,1),(71,.5f),(72,.5f),(74,1),(72,.5f),(71,.5f),(69,1),(69,.5f),(72,.5f),
+            (76,1),(74,.5f),(72,.5f),(71,1.5f),(72,.5f),(74,1),(76,1),(72,1),(69,1),(69,1),(-1,.5f),
+            (74,1.5f),(77,.5f),(81,1),(79,.5f),(77,.5f),(76,1.5f),(72,.5f),
+            (76,1),(74,.5f),(72,.5f),(71,1),(71,.5f),(72,.5f),(74,1),(76,1),(72,1),(69,1),(69,1),(-1,1),
+            (76,1),(71,.5f),(72,.5f),(74,1),(72,.5f),(71,.5f),(69,1),(69,.5f),(72,.5f),
+            (76,1),(74,.5f),(72,.5f),(71,1.5f),(72,.5f),(74,1),(76,1),(72,1),(69,1),(69,1),(-1,.5f),
+            (74,1.5f),(77,.5f),(81,1),(79,.5f),(77,.5f),(76,1.5f),(72,.5f),
+            (76,1),(74,.5f),(72,.5f),(71,1),(71,.5f),(72,.5f),(74,1),(76,1),(72,1),(69,1),(69,1),(-1,1),
+        };
+        float totalBeats = 0;
+        foreach (var n in mel) totalBeats += n.b;
+        int total = (int)(rate * totalBeats * beat);
+        var d = new float[total];
+        float t = 0;
+        foreach (var n in mel)
+        {
+            int len = (int)(rate * n.b * beat);
+            int start = (int)(rate * t * beat);
+            if (n.m >= 0)
+            {
+                float f = 440f * Mathf.Pow(2f, (n.m - 69) / 12f);
+                for (int i = 0; i < len && start + i < total; i++)
+                {
+                    float tt = (float)i / rate;
+                    float env = Mathf.Min(1f, tt / 0.015f) * Mathf.Min(1f, (len - i) / (rate * 0.03f)) * Mathf.Exp(-0.4f * tt / (n.b * beat));
+                    float ph = 2f * Mathf.PI * f * tt;
+                    d[start + i] += 0.13f * env * Mathf.Sin(ph);
+                }
+            }
+            t += n.b;
+        }
+        float[] secBeats = { 15.5f, 16f, 15.5f, 16f };
+        int[][] secRoots = { new[]{45,40,45,40}, new[]{38,43,36,45}, new[]{45,40,45,40}, new[]{38,43,36,45} };
+        const float barBeats = 4f;
+        float secStart = 0;
+        for (int s = 0; s < secBeats.Length; s++)
+        {
+            int nbars = Mathf.CeilToInt(secBeats[s] / barBeats);
+            for (int bar = 0; bar < nbars; bar++)
+            {
+                float f = 440f * Mathf.Pow(2f, (secRoots[s][bar % secRoots[s].Length] - 69) / 12f);
+                int start = (int)(rate * (secStart + bar * barBeats) * beat);
+                int len = (int)(rate * barBeats * beat);
+                for (int i = 0; i < len && start + i < total; i++)
+                {
+                    float tt = (float)i / rate;
+                    float env = Mathf.Min(1f, tt / 0.01f) * Mathf.Exp(-1.2f * tt / (barBeats * beat));
+                    float ph = 2f * Mathf.PI * f * tt;
+                    d[start + i] += 0.10f * env * (Mathf.Sin(ph) + Mathf.Sin(3f * ph) / 3f);
+                }
+            }
+            secStart += secBeats[s];
+        }
+        int fade = (int)(rate * 0.05f);
+        for (int i = 0; i < fade && i < total; i++)
+            d[total - 1 - i] *= Mathf.Min(1f, (float)i / fade);
+        var c = AudioClip.Create("over", total, 1, rate, false);
+        c.SetData(d, 0);
+        return c;
+    }
+
     void BuildClips()
     {
         sMove = MakeTone(660f, 0.05f, 0.22f);
@@ -482,6 +553,7 @@ public class TetrisGameV2 : MonoBehaviour
         // 출처 주의: bgm_nes.mp3는 외부 리믹스 음원 (연습용 팬메이드로 사용자 확인 후 사용, 정식 배포 전 교체 필요).
         bgmClip = Resources.Load<AudioClip>("Audio/bgm_nes");
         if (bgmClip == null) bgmClip = BuildBgm();
+        overClip = BuildOverBgm();
         if (bgm != null) { bgm.clip = bgmClip; if (!bgm.isPlaying) bgm.Play(); }
     }
 
@@ -663,6 +735,13 @@ public class TetrisGameV2 : MonoBehaviour
         if (gameOverPanel != null)
             gameOverPanel.SetActive(true);
         Play(sOver);
+        if (bgm != null && overClip != null)
+        {
+            bgm.Stop();
+            bgm.clip = overClip;
+            bgm.pitch = 1f;
+            bgm.Play();
+        }
     }
 
     // ---------- 게임 로직 ----------
@@ -715,7 +794,7 @@ public class TetrisGameV2 : MonoBehaviour
                 if (fixedCubes[x, y] != null) { Destroy(fixedCubes[x, y]); fixedCubes[x, y] = null; }
         if (gameOverPanel != null) gameOverPanel.SetActive(false);
         if (pausePanel != null) pausePanel.SetActive(false);
-        if (bgm != null) { bgm.pitch = 0.7f; if (!bgm.isPlaying) bgm.Play(); }
+        if (bgm != null) { bgm.Stop(); bgm.clip = bgmClip; bgm.pitch = 0.7f; bgm.Play(); }
         UpdateScoreUI();
         RefreshHoldPreview();
         SpawnNext();
