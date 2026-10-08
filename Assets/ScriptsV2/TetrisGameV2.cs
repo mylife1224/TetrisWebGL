@@ -642,12 +642,35 @@ public class TetrisGameV2 : MonoBehaviour
         finalScoreText = gameOverPanel?.transform.Find("PanelSubLabel")?.GetComponent<TextMeshProUGUI>();
         pausePanel = inst.transform.Find("PausePanel")?.gameObject;
         // 패드/Hint/SND 미사용 (키보드 전용). SysPad에는 일시정지 1종만.
+        // 구 프리팹 호환: HintText/MovePad/ActionPad가 에셋에 남아있으면 숨김.
+        // 이 과정을 하는 이유: 프리팹 재생성 전에도 구 에셋으로 한글 잔재 없이 영어 UI가 나오게 하기 위함.
+        HideIfFound(inst.transform, "HintText");
+        HideIfFound(inst.transform, "MovePad");
+        HideIfFound(inst.transform, "ActionPad");
+        // 구 프리팹의 한글 패널 문구를 영어로 덮어씀 (새 프리팹은 이미 영어라 멱등).
+        SetPanelText(inst.transform, "GameOverPanel/PanelLabel", "GAME OVER");
+        SetPanelText(inst.transform, "GameOverPanel/PanelSubLabel", "SCORE 0");
+        SetPanelText(inst.transform, "GameOverPanel/RestartBtn/Label", "RESTART (R)");
+        SetPanelText(inst.transform, "PausePanel/PanelLabel", "PAUSED");
+        SetPanelText(inst.transform, "PausePanel/ResumeBtn/Label", "RESUME");
         var sysPad = inst.transform.Find("SysPad");
 
         AddPadButton(btnPrefab, sysPad, "PAUSE", 26, TogglePause);
 
         WirePanelButton(gameOverPanel?.transform, "RestartBtn", Restart);
         WirePanelButton(pausePanel?.transform, "ResumeBtn", TogglePause);
+    }
+
+    static void HideIfFound(Transform root, string path)
+    {
+        var go = root.Find(path)?.gameObject;
+        if (go != null) go.SetActive(false);
+    }
+
+    static void SetPanelText(Transform root, string path, string text)
+    {
+        var tmp = root.Find(path)?.GetComponent<TextMeshProUGUI>();
+        if (tmp != null) tmp.text = text;
     }
 
     TouchHoldButton AddPadButton(GameObject prefab, Transform parent, string label, int fontSize, UnityAction act)
