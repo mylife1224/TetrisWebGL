@@ -364,7 +364,7 @@ public class TetrisGameV2 : MonoBehaviour
     bool bgmNeedStart = true;
     AudioClip BuildBgm()
     {
-        const float beat = 0.23f;
+        const float beat = 0.24f;
         const int rate = 22050;
         // (midi, 박). -1 = 쉼표. E5=76 B4=71 C5=72 D5=74 A4=69 F5=77 A5=81 G5=79
         var mel = new (int m, float b)[]
