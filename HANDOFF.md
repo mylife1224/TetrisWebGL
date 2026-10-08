@@ -227,3 +227,11 @@ $env:TETRIS_BUILD_OUT = "<출력경로>"
 - 판정 기준 공유済: 에디터 플레이에서 거대 글자가 사라지면 3D 라벨 경로가 범인. 안 사라지면 별개 원인으로 재진단
 - 관찰(재확인): 플레이모드 종료 후 폰트 `_ScaleRatioA/C` 자동 변경 재발 → 원복 (빌드 시 재생성이라 영향 없음)
 - 다음: 빌드7 요청 대기 (포함분: 속빈수정+UGUI전환+BGM5%+라벨축소 — 단 라벨축소는 UGUI 24pt로 대체됨)
+
+## 세션 기록 (2026-10-08, V2 빌드7 — UGUI 라벨 실기)
+- 결과: `Succeeded totalBytes=14010205` (`v2player7.log:2212`, 빌드6 대비 +2805B)
+- 사전 스모크: `v2smoke8.log:410` `PASS (frames=90, blocks=16, audio=True)`
+- 포함분: HOLD/NEXT UGUI 전환+scaleFactor 재배치, BGM 레벨당 5% 복리, 팝업 isOrthographic. 라벨 크기 24pt(SCORE 28 대비)
+- 검증: CDP 에러 0 + 로딩바 사라짐 + HOLD/NEXT 속 찬 글자로 SCORE와 동일 렌더 (무입력 방치 게임오버, `Temp/opencode/v2b7.png`)
+- 배포: 바탕화면 `TetrisWebGL_V2_Play` 갱신 + itch zip 재생성 (`/` 17엔트리, 13,735,961B). 서버 8080 정리済
+- 다음: itch 재업로드 (기존 삭제→업로드→체크→Save→대기→새로고침→Run game). BGM 자작 교체는 별도
